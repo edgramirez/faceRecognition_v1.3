@@ -819,23 +819,22 @@ def main(args):
     set_action(camera_id, 'find')
     action = get_action(camera_id)
     pwd = os.getcwd()
+    encodings, metadata = [], []
 
     if action == action_types['read']:
         output_db_name = pwd + 'test_video_default.data'
 
         if com.file_exists_and_not_empty(output_db_name):
-            total, encodings, metadata = biblio.read_pickle(output_db_name)
-        else:
-            total, encodings, metadata = 0, [] , []
+            encodings, metadata = biblio.read_pickle(output_db_name)
     elif action == action_types['find']:
         output_db_name = pwd + 'found_faces_db.dat'
         known_faces_db_name = pwd + 'knownFaces.dat'
 
         if com.file_exists(known_faces_db_name):
             set_known_faces_db_name(camera_id, known_faces_db_name)
-            total, encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_id), False)
-        else:
-            com.log_error('Unable to open {}'.format(known_faces_db_name))
+            encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_id), False)
+            #else:
+            #com.log_error('Unable to open source file {}'.format(known_faces_db_name))
 
     set_known_faces_db(camera_id, encodings, metadata)
     set_output_db_name(camera_id, output_db_name)

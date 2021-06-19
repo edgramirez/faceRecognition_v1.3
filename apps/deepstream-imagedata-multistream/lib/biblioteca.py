@@ -132,12 +132,12 @@ def read_pickle(pickle_file, exception_if_fail = True):
     try:
         with open(pickle_file, 'rb') as f:
             known_face_encodings, known_face_metadata = pickle.load(f)
-            return len(known_face_metadata), known_face_encodings, known_face_metadata
+            return known_face_encodings, known_face_metadata
     except OSError as e:
         if exception_if_fail:
             com.log_error("Unable to open pickle_file: {}, original exception {}".format(pickle_file, str(e)))
         else:
-            return 0, [], []
+            return [], []
 
 
 def clasify_to_known_and_unknown(frame_image, face_locations, **kwargs):
@@ -351,7 +351,7 @@ def encode_face_image(face_obj, face_name, camera_id, confidence, print_name):
 
 
 def compare_pickle_against_unknown_images(pickle_file, image_dir):
-    total_known_faces, known_face_encodings, known_face_metadata = read_pickle(pickle_file)
+    known_face_encodings, known_face_metadata = read_pickle(pickle_file)
 
     files, root = com.read_images_in_dir(image_dir)
     for file_name in files:
@@ -387,12 +387,12 @@ def compare_pickle_against_unknown_images(pickle_file, image_dir):
 
 def compare_data(data_file, known_faces_data, tolerated_difference_list):
     # load data from binary db of all faces from video
-    total_visitors, video_face_encodings, video_faces_metadata = read_pickle(data_file)
+    video_face_encodings, video_faces_metadata = read_pickle(data_file)
 
     # load data from binary db of known faces 
-    total_known_faces, known_face_encodings, known_face_metadata = read_pickle(known_faces_data)
+    known_face_encodings, known_face_metadata = read_pickle(known_faces_data)
 
-    if total_known_faces == 0 or total_visitors == 0:
+    if len(video_faces_metadata) == 0 or len(known_face_metadata) == 0:
         com.log_error("One of the db does not contain information {}")
 
     if not isinstance(tolerated_difference_list, list) and len(tolerated_difference_list) > 0:
@@ -433,7 +433,7 @@ def read_video(video_input, data_file, **kwargs):
     number_of_faces_since_save = 0
 
     # load data from binary db
-    total_visitors, known_face_encodings, known_face_metadata = read_pickle(data_file, False)
+    known_face_encodings, known_face_metadata = read_pickle(data_file, False)
 
     frame_counter = 0
     while True:
@@ -477,6 +477,7 @@ def read_video(video_input, data_file, **kwargs):
                 # If this is a brand new face, add it to our list of known faces
                 else:
                     if not find:
+                        total_visitors = len(known_face_metadata)
                         face_label = "New visitor" + str(total_visitors) + '!!'
                         total_visitors += 1
 
