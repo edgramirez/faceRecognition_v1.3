@@ -1,11 +1,7 @@
 #!/bin/bash
 #rm -f data/video_encoded_faces/*
-rm -f data/encoded_known_faces/*
-rm -f data/found_faces/*
 
-#ls data/found_faces/
-#./faces.py loadFaces
-#ls -lartc data/found_faces/
+./load_subject.py loadFaces
 
 #cp data/encoded_known_faces/knownFaces.dat /tmp/data/encoded_known_faces/
 #ls -lartc data/encoded_known_faces/knownFaces.dat
