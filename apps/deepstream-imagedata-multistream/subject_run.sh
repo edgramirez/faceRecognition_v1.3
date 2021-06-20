@@ -1,11 +1,10 @@
 #!/bin/bash
-#rm -f data/video_encoded_faces/*
-rm -f data/encoded_known_faces/*
-rm -f data/found_faces/*
+HOMEDIR='/home/mit-mexico/face_recognition_data_and_results'
+#rm -f HOMEDIR'/knownFaces.dat'
 
-ls data/found_faces/
-./load_subject.py loadFaces
-ls -lartc data/found_faces/
+#ls data/found_faces/
+#./load_subject.py loadFaces
+#ls -lartc data/found_faces/
 
 #cp data/encoded_known_faces/knownFaces.dat /tmp/data/encoded_known_faces/
 #ls -lartc data/encoded_known_faces/knownFaces.dat

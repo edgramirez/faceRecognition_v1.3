@@ -77,7 +77,6 @@ pgie_classes_str= ["face", "Placa", "Marca","Modelo"]
 CURRENT_DIR = os.getcwd()
 
 
-global total_visitors
 global known_face_encodings
 global known_face_metadata
 global action
@@ -94,6 +93,7 @@ global face_detection_url
 global srv_url
 
 srv_url = 'https://mit.kairosconnect.app/'
+HOMEDIR = '/home/mit-mexico/face_recognition_data_and_results'
 
 face_detection_url = {}
 known_faces_indexes = []
@@ -130,6 +130,33 @@ faceNet = cv2.dnn.readNet(faceModel, faceProto)
 ageNet = cv2.dnn.readNet(ageModel, ageProto)
 genderNet = cv2.dnn.readNet(genderModel, genderProto)
 ### setters ###
+
+
+def set_read_pamameters(camera_id):
+    encodings, metadata = [], []
+    output_db_name = HOMEDIR + '/test_video_default.data'
+
+    if com.file_exists_and_not_empty(output_db_name):
+        encodings, metadata = biblio.read_pickle(output_db_name)
+
+    set_known_faces_db(camera_id, encodings, metadata)
+    set_output_db_name(camera_id, output_db_name)
+
+
+def set_find_parameters(camera_id):
+    encodings, metadata = [], []
+    output_db_name = HOMEDIR + '/found_faces_db.dat'
+    known_faces_db_name = HOMEDIR + '/knownFaces.dat'
+
+    if com.file_exists(known_faces_db_name):
+        set_known_faces_db_name(camera_id, known_faces_db_name)
+        encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_id), False)
+    else:
+        com.log_error('Unable to open source file {}'.format(known_faces_db_name))
+
+    set_known_faces_db(camera_id, encodings, metadata)
+    set_output_db_name(camera_id, output_db_name)
+
 
 def set_face_detection_url(camera_id):
     global srv_url, face_detection_url
@@ -239,7 +266,7 @@ def get_known_faces_db_name(camera_id):
 
 def get_known_faces_db(camera_id):
     global known_face_metadata, known_face_encodings
-    return len(known_face_metadata[camera_id]), known_face_metadata[camera_id], known_face_encodings[camera_id]
+    return known_face_metadata[camera_id], known_face_encodings[camera_id]
 
 
 def get_known_faces_indexes(camera_id):
@@ -590,7 +617,25 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
     delta = get_delta(camera_id)
     default_similarity = get_similarity(camera_id)
 
-    total_visitors, known_face_metadata, known_face_encodings = get_known_faces_db(camera_id)
+    if program_action == action_types['find']:
+        # TODO
+        #
+        # json talk to the dashboard to check current data 
+        # Do not check every iteraction cause will increase a lot the communication with the server only every 10 seconds per tienda
+        #
+        # store somehow the subject version locally
+        #
+        # check the subjects version is the same as in the server
+        #
+        # if different version get the server version and new data ideally only the differential to what we already have
+        #
+        # setup this differential in memory and continue
+        #
+        # store somehow the subject version locally
+        #
+        donothin = 'till we get the described logic'
+
+    known_face_metadata, known_face_encodings = get_known_faces_db(camera_id)
     tracking_absence_dict = get_tracking_absence_dict(camera_id)
     id_set = set()
 
@@ -818,26 +863,11 @@ def main(args):
     set_action(camera_id, 'read')
     set_action(camera_id, 'find')
     action = get_action(camera_id)
-    pwd = os.getcwd()
-    encodings, metadata = [], []
 
     if action == action_types['read']:
-        output_db_name = pwd + 'test_video_default.data'
-
-        if com.file_exists_and_not_empty(output_db_name):
-            encodings, metadata = biblio.read_pickle(output_db_name)
+        set_read_pamameters(camera_id)
     elif action == action_types['find']:
-        output_db_name = pwd + 'found_faces_db.dat'
-        known_faces_db_name = pwd + 'knownFaces.dat'
-
-        if com.file_exists(known_faces_db_name):
-            set_known_faces_db_name(camera_id, known_faces_db_name)
-            encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_id), False)
-            #else:
-            #com.log_error('Unable to open source file {}'.format(known_faces_db_name))
-
-    set_known_faces_db(camera_id, encodings, metadata)
-    set_output_db_name(camera_id, output_db_name)
+        set_find_parameters(camera_id)
 
     # Create gstreamer elements */
     # Create Pipeline element that will form a connection of other elements
