@@ -21,7 +21,7 @@ if sys.argv[1] == 'loadFaces':
         com.log_error(msg)
 
     import lib.biblioteca as biblio 
-    com.create_dir_if_not_exists()
+    com.create_data_dir()
     biblio.encode_known_faces_from_images_in_dir(known_faces, data_file)
 elif sys.argv[1] == 'appendTo':
     if param_length == 2:
