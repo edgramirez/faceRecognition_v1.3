@@ -14,9 +14,8 @@ DATA_AND_RESULTS = '/face_recognition_data_and_results'
 HOMEDIR = os.environ['HOME'] + DATA_AND_RESULTS
 
 
-def create_data_dir(
+def create_data_dir():
     path = os.path.join(os.environ['HOME'], DATA_AND_RESULTS)
-    print(path)
     os.mkdir(path)
 
 def log_error(msg, _quit = True):
