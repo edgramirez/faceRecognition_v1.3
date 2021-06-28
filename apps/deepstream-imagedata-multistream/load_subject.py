@@ -3,7 +3,7 @@ import sys
 import lib.common as com
 
 param_length = len(sys.argv)
-HOMEDIR = '/home/mit-mexico/face_recognition_data_and_results'
+
 
 msg = 'Usage: ' + sys.argv[0] + ' loadFaces | readVideo | readSilence | findImg | findVideo | compareData | appendTo'
 
@@ -13,7 +13,7 @@ if param_length < 2:
 if sys.argv[1] == 'loadFaces':
     if param_length == 2:
         known_faces = 'data/load'
-        data_file = HOMEDIR + '/knownFaces.dat'
+        data_file = com.HOMEDIR + '/knownFaces.dat'
     elif param_length == 4 and sys.argv[3] == 'output':
         known_faces = sys.argv[2]
         pickle_file = sys.argv[4]
@@ -21,6 +21,7 @@ if sys.argv[1] == 'loadFaces':
         com.log_error(msg)
 
     import lib.biblioteca as biblio 
+    com.create_dir_if_not_exists()
     biblio.encode_known_faces_from_images_in_dir(known_faces, data_file)
 elif sys.argv[1] == 'appendTo':
     if param_length == 2:
