@@ -818,17 +818,17 @@ def main(args):
     set_action(camera_id, 'read')
     set_action(camera_id, 'find')
     action = get_action(camera_id)
-    pwd = os.getcwd()
+    com.create_data_dir()
     encodings, metadata = [], []
 
     if action == action_types['read']:
-        output_db_name = pwd + '/test_video_default.data'
+        output_db_name = com.HOMEDIR + '/test_video_default.data'
 
         if com.file_exists_and_not_empty(output_db_name):
             total, encodings, metadata = biblio.read_pickle(output_db_name)
     elif action == action_types['find']:
-        output_db_name = pwd + '/found_faces_db.dat'
-        known_faces_db_name = pwd + '/knownFaces.dat'
+        output_db_name = com.HOMEDIR + '/found_faces_db.dat'
+        known_faces_db_name = com.HOMEDIR + '/knownFaces.dat'
 
         if com.file_exists(known_faces_db_name):
             set_known_faces_db_name(camera_id, known_faces_db_name)
