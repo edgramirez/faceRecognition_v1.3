@@ -16,7 +16,10 @@ HOMEDIR = os.environ['HOME'] + DATA_AND_RESULTS
 
 def create_data_dir():
     path = os.environ['HOME'] +  DATA_AND_RESULTS
-    os.mkdir(path)
+    try:
+        os.mkdir(path)
+    except FileExistsError as e:
+        print("Ignoring exception: ", str(e))
 
 def log_error(msg, _quit = True):
     print("-- PARAMETER ERROR --\n"*5)
