@@ -855,6 +855,7 @@ def main(args):
     set_action(camera_id, 'read')
     set_action(camera_id, 'find')
     action = get_action(camera_id)
+    com.create_data_dir()
 
     if action == action_types['read']:
         set_read_pamameters(camera_id)
