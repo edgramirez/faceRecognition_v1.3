@@ -3,6 +3,7 @@ import sys
 import lib.common as com
 
 param_length = len(sys.argv)
+home_dir = com.HOMEDIR
 
 
 msg = 'Usage: ' + sys.argv[0] + ' loadFaces | readVideo | readSilence | findImg | findVideo | compareData | appendTo'
@@ -13,7 +14,7 @@ if param_length < 2:
 if sys.argv[1] == 'loadFaces':
     if param_length == 2:
         known_faces = 'data/load'
-        data_file = com.HOMEDIR + '/knownFaces.dat'
+        data_file = home_dir + '/knownFaces.dat'
     elif param_length == 4 and sys.argv[3] == 'output':
         known_faces = sys.argv[2]
         pickle_file = sys.argv[4]

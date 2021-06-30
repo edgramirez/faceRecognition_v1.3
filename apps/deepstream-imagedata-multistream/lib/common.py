@@ -12,6 +12,7 @@ source_type = {'IMAGE': 'image', 'RTSP': 'rtsp', 'VIDEO': 'video'}
 # home directory + directory to get data and store results 
 DATA_AND_RESULTS = '/face_recognition_data_and_results'
 HOMEDIR = os.environ['HOME'] + DATA_AND_RESULTS
+SERVER_URI = 'https://mit.kairosconnect.app/'
 
 
 def create_data_dir():

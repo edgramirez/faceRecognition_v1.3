@@ -90,18 +90,12 @@ global tracking_absence_dict
 global output_file
 global input_file
 global face_detection_url
-global srv_url
 
-srv_url = 'https://mit.kairosconnect.app/'
-HOMEDIR = '/home/mit-mexico/face_recognition_data_and_results'
 
 face_detection_url = {}
 known_faces_indexes = []
-#not_applicable_id = []
 not_applicable_id = {}
-#known_face_metadata = []
 known_face_metadata = {}
-#known_face_encodings = []
 known_face_encodings = {}
 found_faces = []
 tracking_absence_dict = {}
@@ -112,8 +106,6 @@ action = {}
 fake_frame_number = 0
 
 
-
-baseDir = '/home/mit-mexico/github/Gender-and-Age-Detection/'
 baseDir = 'configs/'
 faceProto = baseDir + "opencv_face_detector.pbtxt"
 faceModel = baseDir + "opencv_face_detector_uint8.pb"
@@ -134,7 +126,7 @@ genderNet = cv2.dnn.readNet(genderModel, genderProto)
 
 def set_read_pamameters(camera_id):
     encodings, metadata = [], []
-    output_db_name = HOMEDIR + '/test_video_default.data'
+    output_db_name = com.HOMEDIR + '/test_video_default.data'
 
     if com.file_exists_and_not_empty(output_db_name):
         encodings, metadata = biblio.read_pickle(output_db_name)
@@ -145,8 +137,8 @@ def set_read_pamameters(camera_id):
 
 def set_find_parameters(camera_id):
     encodings, metadata = [], []
-    output_db_name = HOMEDIR + '/found_faces_db.dat'
-    known_faces_db_name = HOMEDIR + '/knownFaces.dat'
+    output_db_name = com.HOMEDIR + '/found_faces_db.dat'
+    known_faces_db_name = com.HOMEDIR + '/knownFaces.dat'
 
     if com.file_exists(known_faces_db_name):
         set_known_faces_db_name(camera_id, known_faces_db_name)
@@ -159,8 +151,8 @@ def set_find_parameters(camera_id):
 
 
 def set_face_detection_url(camera_id):
-    global srv_url, face_detection_url
-    face_detection_url.update({camera_id: srv_url + 'tx/face-detection.endpoint'})
+    global face_detection_url
+    face_detection_url.update({camera_id: com.SERVER_URI + 'tx/face-detection.endpoint'})
 
 
 def set_action(camera_id, value):
@@ -967,7 +959,6 @@ def main(args):
     streammux.set_property('height', 720)
     streammux.set_property('batch-size', number_sources)
     streammux.set_property('batched-push-timeout', 4000000)
-    print('CURRENT_DIR', CURRENT_DIR)
     pgie.set_property('config-file-path',CURRENT_DIR + "/configs/pgie_config_facenet.txt")
     pgie_batch_size=pgie.get_property("batch-size")
     if(pgie_batch_size != number_sources):

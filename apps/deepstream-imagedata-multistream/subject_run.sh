@@ -1,7 +1,4 @@
 #!/bin/bash
-HOMEDIR='/home/mit-mexico/face_recognition_data_and_results'
-#rm -f HOMEDIR'/knownFaces.dat'
-
 #ls data/found_faces/
 #./load_subject.py loadFaces
 #ls -lartc data/found_faces/
