@@ -138,7 +138,7 @@ def set_read_pamameters(camera_id):
 def set_find_parameters(camera_id):
     encodings, metadata = [], []
     output_db_name = com.HOMEDIR + '/found_faces_db.dat'
-    known_faces_db_name = com.HOMEDIR + '/knownFaces.dat'
+    known_faces_db_name = com.HOMEDIR + '/BlackList.dat'
 
     if com.file_exists(known_faces_db_name):
         set_known_faces_db_name(camera_id, known_faces_db_name)
