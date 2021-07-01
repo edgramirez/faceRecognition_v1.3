@@ -134,20 +134,39 @@ def set_read_pamameters(camera_id):
     set_known_faces_db(camera_id, encodings, metadata)
     set_output_db_name(camera_id, output_db_name)
 
+    return encodings, metadata
+
 
 def set_find_parameters(camera_id):
     encodings, metadata = [], []
+    encodings_tmp, metadata_tmp = [], []
     output_db_name = com.HOMEDIR + '/found_faces_db.dat'
-    known_faces_db_name = com.HOMEDIR + '/BlackList.dat'
+    black_list = com.HOMEDIR + '/BlackList.dat'
+    white_list = com.HOMEDIR + '/WhiteList.dat'
+    known_faces_db_name = com.HOMEDIR + '/FindFaces.dat'
 
-    if com.file_exists(known_faces_db_name):
+    # Check if there are content to add
+    if com.file_exists(black_list) or com.file_exists(white_list):
         set_known_faces_db_name(camera_id, known_faces_db_name)
-        encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_id), False)
+        print('a1')
+
+        if com.file_exists(black_list):
+            encodings, metadata = biblio.read_pickle(black_list, False)
+
+        if com.file_exists(white_list):
+            encodings_tmp, metadata_tmp = biblio.read_pickle(white_list, False)
+
+            if metadata:
+                if metadata_tmp:
+                    for index in range(len(encodings)):
+                        encodings.append(encodings[index])
+                    for index in range(len(metadata)):
+                        metadata.append(metadata[index])
+            else:
+                encodings = encodings_tmp
+                metadata = metadata_tmp
     else:
         com.log_error('Unable to open source file {}'.format(known_faces_db_name))
-
-    set_known_faces_db(camera_id, encodings, metadata)
-    set_output_db_name(camera_id, output_db_name)
 
 
 def set_face_detection_url(camera_id):
@@ -293,7 +312,7 @@ def get_camera_id(camera_id):
 
 
 def get_delta(camera_id):
-    return 120
+    return 1
 
 
 def get_similarity(camera_id):
@@ -359,7 +378,6 @@ def add_new_face_metadata(camera_id, face_image, confidence, difference, obj_id)
 
 def register_new_face_3(camera_id, face_encoding, image, confidence, difference, obj_id):
     # Add the new face metadata to our known faces metadata
-    #add_new_face_metadata(camera_id, image, name, confidence, difference, obj_id)
     add_new_face_metadata(camera_id, image, confidence, difference, obj_id)
     # Add the face encoding to the list of known faces encodings
     add_faces_encodings(camera_id, face_encoding)
@@ -474,7 +492,11 @@ def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action
             # hay coincidencia alguno de los rostros buscados
             if best_index is None:
                 update_not_applicable_id(camera_id, obj_id)
+                print('-------- Detecto rostro no coincidente en id: {} ...'.format(obj_id))
+                cv2.imwrite('/tmp/found_elements/found_multiple_' + str(obj_id) + ".jpg", image)
                 return False
+
+            print('-------- BlackList Detecto coincidencia con id: {}...'.format(obj_id))
 
             # verificar si ya se encuentra detectado bajo otro id y entonces solo actualiza
             # obtine la estructura y datos actuales de los rostros encontrados 
@@ -503,7 +525,7 @@ def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action
                     return True
                 i += 1
 
-            #print('Sujeto1.2 {}, encontrado en frame {} con id: {} ,confidence: {}, distance: {}'.format(metadata['name'], frame_number, obj_id, confidence, difference))
+            print('Sujeto1.2 {}, encontrado en frame {} con id: {} ,confidence: {}, distance: {}'.format(metadata['name'], frame_number, obj_id, confidence, difference))
             found_faces.append({
                 'name': metadata['name'],
                 'face_id': [obj_id],
@@ -680,7 +702,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
                     known_faces_indexes = get_known_faces_indexes(camera_id)
                     if classify_to_known_and_unknown(camera_id, frame_image, obj_meta.object_id, name, program_action, obj_meta.confidence, fake_frame_number, delta, default_similarity, known_faces_indexes, known_face_metadata, known_face_encodings):
                         save_image = True
-                        #cv2.imwrite('/tmp/found_elements/found_multiple_' + str(fake_frame_number) + ".jpg", frame_image)
+                        cv2.imwrite('/tmp/found_elements/found_multiple_' + str(fake_frame_number) + ".jpg", frame_image)
             try: 
                 l_obj = l_obj.next
             except StopIteration:
