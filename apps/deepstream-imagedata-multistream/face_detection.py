@@ -359,7 +359,6 @@ def add_new_face_metadata(camera_id, face_image, confidence, difference, obj_id)
 
 def register_new_face_3(camera_id, face_encoding, image, confidence, difference, obj_id):
     # Add the new face metadata to our known faces metadata
-    #add_new_face_metadata(camera_id, image, name, confidence, difference, obj_id)
     add_new_face_metadata(camera_id, image, confidence, difference, obj_id)
     # Add the face encoding to the list of known faces encodings
     add_faces_encodings(camera_id, face_encoding)
