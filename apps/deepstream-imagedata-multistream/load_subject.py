@@ -23,10 +23,10 @@ if sys.argv[1] == 'blacklist':
 
     import lib.biblioteca as biblio 
     com.create_data_dir()
-    biblio.encode_known_faces_from_images_in_dir(known_faces, data_file)
+    biblio.encode_known_faces_from_images_in_dir(known_faces, data_file, 'black')
 elif sys.argv[1] == 'whitelist':
     if param_length == 2:
-        known_faces = 'data/black_list'
+        known_faces = 'data/white_list'
         data_file = home_dir + '/WhiteList.dat'
     elif param_length == 4 and sys.argv[3] == 'output':
         known_faces = sys.argv[2]
@@ -36,7 +36,7 @@ elif sys.argv[1] == 'whitelist':
 
     import lib.biblioteca as biblio 
     com.create_data_dir()
-    biblio.encode_known_faces_from_images_in_dir(known_faces, data_file)
+    biblio.encode_known_faces_from_images_in_dir(known_faces, data_file, 'white')
 elif sys.argv[1] == 'appendTo':
     if param_length == 2:
         known_faces = 'data/load'
