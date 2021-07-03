@@ -90,8 +90,10 @@ global tracking_absence_dict
 global output_file
 global input_file
 global face_detection_url
+global image_group_type
 
 
+image_group_type = {}
 face_detection_url = {}
 known_faces_indexes = []
 not_applicable_id = {}
@@ -122,6 +124,20 @@ faceNet = cv2.dnn.readNet(faceModel, faceProto)
 ageNet = cv2.dnn.readNet(ageModel, ageProto)
 genderNet = cv2.dnn.readNet(genderModel, genderProto)
 ### setters ###
+
+
+def set_group_type(camera_id, group_type):
+    global image_group_type
+    image_group_type.update({camera_id: group_type})
+
+
+def get_group_type(camera_id):
+    global image_group_type
+
+    if camera_id in image_group_type:
+        return image_group_type
+    else:
+        com.log_error('Action  {}'.format(db_name))
 
 
 def set_read_pamameters(camera_id):
@@ -866,13 +882,14 @@ def main(args):
     if action == action_types['read']:
         set_read_pamameters(camera_id)
     elif action == action_types['find']:
-        group_type = 'blacklist'
         group_type = 'whitelist'
+        group_type = 'blacklist' # TEST VALUE
+        set_group_type(camera_id, group_type)
 
         if group_type not in com.IMAGE_GROUPS:
             com.log_error('Action  {}'.format(db_name))
 
-        set_find_parameters(camera_id, group_type)
+        set_find_parameters(camera_id, get_group_type(camera_id))
 
     # Create gstreamer elements */
     # Create Pipeline element that will form a connection of other elements
