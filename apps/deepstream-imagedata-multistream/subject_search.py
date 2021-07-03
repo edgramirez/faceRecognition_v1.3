@@ -704,7 +704,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
             # If such detections are found, annoate the frame with bboxes and confidence value.
 
             # Save the annotated frame to file.
-            if obj_meta.class_id == 0 and obj_meta.confidence > 0.81:
+            if obj_meta.class_id == 0 and obj_meta.confidence > 0.76:
                 # Getting Image data using nvbufsurface
                 # the input should be address of buffer and batch_id
                 n_frame = pyds.get_nvds_buf_surface(hash(gst_buffer), frame_meta.batch_id)

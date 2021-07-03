@@ -222,7 +222,8 @@ def delete_pickle(data_file):
         raise Exception('unable to delete file: %s' % file_name)
 
 
-def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, tolerated_difference = 0.59):
+#def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, tolerated_difference = 0.59):
+def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, tolerated_difference = 0.3):
     '''
     - See if this face was already stored in our list of faces
     - tolerated_difference: is the parameter that indicates how much 2 faces are similar, 0 is the best match and 1 means are completly different
