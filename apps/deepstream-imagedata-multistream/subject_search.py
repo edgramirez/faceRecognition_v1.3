@@ -135,7 +135,7 @@ def get_group_type(camera_id):
     global image_group_type
 
     if camera_id in image_group_type:
-        return image_group_type
+        return image_group_type[camera_id]
     else:
         com.log_error('Action  {}'.format(db_name))
 
@@ -490,12 +490,19 @@ def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action
             metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata)
 
             # verificar si hubo coincidencia con alguno de los rostros buscados
+            current_group_type = get_group_type(camera_id)
             if best_index is None:
                 update_not_applicable_id(camera_id, obj_id)
-                print('Vio un rostro con id: {}, pero no esta en la lista'.format(obj_id))
+                if current_group_type == 'whitelist':
+                    print('Rostro con id: {}, no esta en la White list. Reportando incidente......'.format(obj_id))
+                else:
+                    print('Rostro con id: {}, no esta en la Black list, todo OK.....'.format(obj_id))
+
                 return False
 
-            print('Encontro un rostro con id: {} that match {}'.format(obj_id, metadata['name']))
+            if current_group_type == 'blacklist':
+                print('Rostro con id: {} coincide con elemento {} en la Black list'.format(obj_id, metadata['name']))
+
             # verificar si ya se encuentra detectado bajo otro id y entonces solo actualiza
             # obtine la estructura y datos actuales de los rostros encontrados 
             found_faces = get_found_faces(camera_id)
