@@ -495,13 +495,20 @@ def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action
                 update_not_applicable_id(camera_id, obj_id)
                 if current_group_type == 'whitelist':
                     print('Rostro con id: {}, no esta en la White list. Reportando incidente......'.format(obj_id))
+                    cv2.imwrite('/tmp/found_elements/notInWhiteList_' + str(obj_id) + ".jpg", image)
                 else:
                     print('Rostro con id: {}, no esta en la Black list, todo OK.....'.format(obj_id))
+                    cv2.imwrite('/tmp/found_elements/notInBlackList_' + str(obj_id) + ".jpg", image)
 
                 return False
 
             if current_group_type == 'blacklist':
                 print('Rostro con id: {} coincide con elemento {} en la Black list'.format(obj_id, metadata['name']))
+                cv2.imwrite('/tmp/found_elements/BlackListMatch_' + str(obj_id) + ".jpg", image)
+            else:
+                print('Rostro con id: {} coincide con elemento {} en la White list'.format(obj_id, metadata['name']))
+                cv2.imwrite('/tmp/found_elements/WhiteListMatch_' + str(obj_id) + ".jpg", image)
+
 
             # verificar si ya se encuentra detectado bajo otro id y entonces solo actualiza
             # obtine la estructura y datos actuales de los rostros encontrados 
