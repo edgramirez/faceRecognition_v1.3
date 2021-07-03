@@ -134,39 +134,23 @@ def set_read_pamameters(camera_id):
     set_known_faces_db(camera_id, encodings, metadata)
     set_output_db_name(camera_id, output_db_name)
 
-    return encodings, metadata
 
-
-def set_find_parameters(camera_id):
+def set_find_parameters(camera_id, group_type):
     encodings, metadata = [], []
-    encodings_tmp, metadata_tmp = [], []
     output_db_name = com.HOMEDIR + '/found_faces_db.dat'
-    black_list = com.HOMEDIR + '/BlackList.dat'
-    white_list = com.HOMEDIR + '/WhiteList.dat'
-    known_faces_db_name = com.HOMEDIR + '/FindFaces.dat'
 
-    # Check if there are content to add
-    if com.file_exists(black_list) or com.file_exists(white_list):
-        set_known_faces_db_name(camera_id, known_faces_db_name)
-        print('a1')
-
-        if com.file_exists(black_list):
-            encodings, metadata = biblio.read_pickle(black_list, False)
-
-        if com.file_exists(white_list):
-            encodings_tmp, metadata_tmp = biblio.read_pickle(white_list, False)
-
-            if metadata:
-                if metadata_tmp:
-                    for index in range(len(encodings)):
-                        encodings.append(encodings[index])
-                    for index in range(len(metadata)):
-                        metadata.append(metadata[index])
-            else:
-                encodings = encodings_tmp
-                metadata = metadata_tmp
+    if group_type == com.IMAGE_GROUPS[0]:
+        db_name = com.HOMEDIR + '/BlackList.dat'
     else:
-        com.log_error('Unable to open source file {}'.format(known_faces_db_name))
+        db_name = com.HOMEDIR + '/WhiteList.dat'
+
+    if com.file_exists(db_name):
+        set_output_db_name(camera_id, output_db_name)
+        set_known_faces_db_name(camera_id, db_name)
+        encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_id), False)
+        set_known_faces_db(camera_id, encodings, metadata)
+    else:
+        com.log_error('Unable to open source file {}'.format(db_name))
 
 
 def set_face_detection_url(camera_id):
@@ -489,15 +473,13 @@ def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action
 
             metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata)
 
-            # hay coincidencia alguno de los rostros buscados
+            # verificar si hubo coincidencia con alguno de los rostros buscados
             if best_index is None:
                 update_not_applicable_id(camera_id, obj_id)
-                print('-------- Detecto rostro no coincidente en id: {} ...'.format(obj_id))
-                cv2.imwrite('/tmp/found_elements/found_multiple_' + str(obj_id) + ".jpg", image)
+                print('Vio un rostro con id: {}, pero no esta en la lista'.format(obj_id))
                 return False
 
-            print('-------- BlackList Detecto coincidencia con id: {}...'.format(obj_id))
-
+            print('Encontro un rostro con id: {} that match {}'.format(obj_id, metadata['name']))
             # verificar si ya se encuentra detectado bajo otro id y entonces solo actualiza
             # obtine la estructura y datos actuales de los rostros encontrados 
             found_faces = get_found_faces(camera_id)
@@ -525,7 +507,7 @@ def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action
                     return True
                 i += 1
 
-            print('Sujeto1.2 {}, encontrado en frame {} con id: {} ,confidence: {}, distance: {}'.format(metadata['name'], frame_number, obj_id, confidence, difference))
+            #print('Sujeto1.2 {}, encontrado en frame {} con id: {} ,confidence: {}, distance: {}'.format(metadata['name'], frame_number, obj_id, confidence, difference))
             found_faces.append({
                 'name': metadata['name'],
                 'face_id': [obj_id],
@@ -545,6 +527,8 @@ def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action
 
             # ID already in the list of IDs
         else:
+            return False # no hace nada para ids ya identificados
+
             found_faces = get_found_faces(camera_id)
             i = 0
             for found_face in found_faces:
@@ -702,7 +686,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
                     known_faces_indexes = get_known_faces_indexes(camera_id)
                     if classify_to_known_and_unknown(camera_id, frame_image, obj_meta.object_id, name, program_action, obj_meta.confidence, fake_frame_number, delta, default_similarity, known_faces_indexes, known_face_metadata, known_face_encodings):
                         save_image = True
-                        cv2.imwrite('/tmp/found_elements/found_multiple_' + str(fake_frame_number) + ".jpg", frame_image)
+                        #cv2.imwrite('/tmp/found_elements/found_multiple_' + str(fake_frame_number) + ".jpg", frame_image)
             try: 
                 l_obj = l_obj.next
             except StopIteration:
@@ -882,7 +866,13 @@ def main(args):
     if action == action_types['read']:
         set_read_pamameters(camera_id)
     elif action == action_types['find']:
-        set_find_parameters(camera_id)
+        group_type = 'blacklist'
+        group_type = 'whitelist'
+
+        if group_type not in com.IMAGE_GROUPS:
+            com.log_error('Action  {}'.format(db_name))
+
+        set_find_parameters(camera_id, group_type)
 
     # Create gstreamer elements */
     # Create Pipeline element that will form a connection of other elements

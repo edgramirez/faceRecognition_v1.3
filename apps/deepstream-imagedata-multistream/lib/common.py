@@ -8,6 +8,7 @@ from os import walk
 
 global source_type
 source_type = {'IMAGE': 'image', 'RTSP': 'rtsp', 'VIDEO': 'video'}
+IMAGE_GROUPS = ('blacklist', 'whitelist')
 
 # home directory + directory to get data and store results 
 DATA_AND_RESULTS = '/face_recognition_data_and_results'

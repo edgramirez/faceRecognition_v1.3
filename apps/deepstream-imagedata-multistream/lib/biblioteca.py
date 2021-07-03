@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 global header
 global srv_url
 
-IMAGE_GROUPS = ('black', 'white')
 font = cv2.FONT_HERSHEY_SIMPLEX
 srv_url = 'https://mit.kairosconnect.app/'
 header = None
@@ -217,44 +216,6 @@ def display_recent_visitors_face(known_face_metadata, frame):
             cv2.putText(frame, visit_label, (x_position + 10, 170), cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 255), 1)
 
 
-def new_face_metadata(face_image, name = None, camera_id = None, confidence = None, image_group = None):
-    """
-    Add a new person to our list of known faces
-    """
-    #camera_id = source_info.get('camera_id', None)
-    #confidence = source_info.get('confidence', None)
-    #source_type = source_info.get('source_type', None)
-
-    if name is None:
-        #source_info['name'] = source_info['camera_id'] + '_' + source_info['source_type'] + '_' + str(get_timestamp())
-        name = camera_id + '_' + str(com.get_timestamp())
-
-    if image_group and not image_group in IMAGE_GROUPS:
-        com.log_error("Image type most be one of the followings or None: {}".format(IMAGE_GROUPS))
-
-    if image_group:
-        print('Adding image: {} to group: {}'.format(name, image_group))
-    else:
-        print('Adding image: {}'.format(name))
-
-    today_now = datetime.now()
-
-    return {
-        'name': name,
-        'face_id': 0,
-        'camera_id': camera_id,
-        'image_group': image_group,
-        'first_seen': today_now,
-        'first_seen_this_interaction': today_now,
-        'image': face_image,
-        'confidence': confidence,
-        'last_seen': today_now,
-        'seen_count': 1,
-        'seen_frames': 1
-    }
-    #    'source_type': source_type,
-
-
 def delete_pickle(data_file):
     os.remove(data_file)
     if com.file_exists(data_file):
@@ -294,13 +255,14 @@ def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, 
     return None, None, None
 
 
-def encode_known_faces_from_images_in_dir(image_path, output_file, group = None):
+def encode_known_faces_from_images_in_dir(image_path, output_file, image_group = None):
     '''
     Esta funccion codifica los rostros encotrados en las imagenes presentes en el diretorio especificado
     '''
     files, root = com.read_images_in_dir(image_path)
     known_face_metadata = []
     known_face_encodings = []
+    #source_type = com.source_type['IMAGE']
 
     write_to_file = False
     for file_name in files:
@@ -308,27 +270,24 @@ def encode_known_faces_from_images_in_dir(image_path, output_file, group = None)
         source_info = {}
         face_obj = face_recognition.load_image_file(root + '/' + file_name)
         name = os.path.splitext(file_name)[0]
-
-        known_face_encodings, known_face_metadata = encode_and_update_face_image(face_obj, name, known_face_encodings, known_face_metadata, group)
-
+        known_face_encodings, known_face_metadata = encode_and_update_face_image(face_obj, name, known_face_encodings, known_face_metadata, image_group)
         if known_face_encodings:
             write_to_file = True
-
     if write_to_file:
         write_to_pickle(known_face_encodings, known_face_metadata, output_file)
     else:
         print('Ningun archivo de imagen contiene rostros: {}'.format(image_path))
 
 
-def encode_and_update_face_image(face_obj, name, face_encodings, face_metadata, group_name = None):
-    new_encoding, new_metadata = encode_face_image(face_obj, name, None, None, group_name)
+def encode_and_update_face_image(face_obj, name, face_encodings, face_metadata, image_group = None):
+    new_encoding, new_metadata = encode_face_image(face_obj, name, None, None, True, image_group)
     if new_encoding is not None:
         face_encodings.append(new_encoding)
         face_metadata.append(new_metadata)
     return face_encodings, face_metadata
 
 
-def encode_face_image(face_obj, face_name, camera_id, confidence, group_name = None):
+def encode_face_image(face_obj, face_name, camera_id, confidence, print_name, image_group = None):
     # covert the array into cv2 default color format
     # THIS ALREADY DONE IN CROP
     #rgb_frame = cv2.cvtColor(face_obj, cv2.COLOR_RGB2BGR)
@@ -352,10 +311,40 @@ def encode_face_image(face_obj, face_name, camera_id, confidence, group_name = N
             encoding = face_recognition.face_encodings(rgb_small_frame)
 
         if encoding:
-            face_metadata_dict = new_face_metadata(face_obj, face_name, camera_id, confidence, group_name)
+            face_metadata_dict = new_face_metadata(face_obj, face_name, camera_id, confidence, print_name, image_group)
             return encoding[0], face_metadata_dict
 
     return None, None
+
+
+def new_face_metadata(face_image, name = None, camera_id = None, confidence = None, print_name = False, image_group = None):
+    """
+    Add a new person to our list of known faces
+    """
+    if image_group and not image_group in com.IMAGE_GROUPS:
+        com.log_error("Image type most be one of the followings or None: {}".format(com.IMAGE_GROUPS))
+
+    if name is None:
+        name = camera_id + '_' + str(com.get_timestamp())
+    else:
+        if print_name:
+            print('Saving face: {} in group: {}'.format(name, image_group))
+
+    today_now = datetime.now()
+
+    return {
+        'name': name,
+        'face_id': 0,
+        'camera_id': camera_id,
+        'first_seen': today_now,
+        'first_seen_this_interaction': today_now,
+        'image': face_image,
+        'image_group': image_group,
+        'confidence': confidence,
+        'last_seen': today_now,
+        'seen_count': 1,
+        'seen_frames': 1
+    }
 
 
 def compare_pickle_against_unknown_images(pickle_file, image_dir):
