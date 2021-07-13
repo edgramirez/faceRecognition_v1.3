@@ -42,7 +42,7 @@ def get_server_info(abort_if_exception = True, quit_program = True):
     global srv_url
     url = srv_url + 'tx/device.getConfigByProcessDevice'
     for machine_id in com.get_machine_macaddresses():
-        machine_id = '00:04:4b:eb:f6:dd'  # HARDCODED MACHINE ID
+        #machine_id = '00:04:4b:eb:f6:dd'  # HARDCODED MACHINE ID
         data = {"id": machine_id}
         
         if abort_if_exception:
@@ -222,8 +222,7 @@ def delete_pickle(data_file):
         raise Exception('unable to delete file: %s' % file_name)
 
 
-#def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, tolerated_difference = 0.59):
-def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, tolerated_difference = 0.3):
+def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, tolerated_difference = 0.64):
     '''
     - See if this face was already stored in our list of faces
     - tolerated_difference: is the parameter that indicates how much 2 faces are similar, 0 is the best match and 1 means are completly different
