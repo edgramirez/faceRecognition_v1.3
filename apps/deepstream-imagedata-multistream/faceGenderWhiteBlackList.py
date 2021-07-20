@@ -475,11 +475,12 @@ def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action
 
         if program_action == action_types['recurrence']:
             eval_recurrence(image, name, camera_id, confidence, known_face_encodings, known_face_metadata)
+            return True
         else:
             print("Expecting gender/age result:")
             get_gender_and_age(image)
 
-        return True
+        return False
 
     else: # ---- FIND FACES ----
         not_applicable_id = get_not_applicable_id(camera_id, abort = False)
