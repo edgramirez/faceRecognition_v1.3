@@ -453,11 +453,10 @@ def eval_recurrence(image, name, camera_id, confidence, known_face_encodings, kn
         register_new_face_3(camera_id, img_encoding, image, confidence, None, obj_id)
 
 
-def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action, confidence, frame_number, delta, default_similarity, known_face_metadata, known_face_encodings):
+def classify_to_known_and_unknown(camera_id, image, obj_id, name, program_action, confidence, frame_number, delta, default_similarity, known_faces_indexes, known_face_metadata, known_face_encodings):
     # Using face_detection library, try to encode the image
     update = False
     best_index = None
-    known_faces_indexes = get_known_faces_indexes(camera_id)
 
     if program_action == action_types['recurrence'] or program_action == action_types['age_gender']:
         difference = None
@@ -656,8 +655,8 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
                 if frame_image.size > 0:
                     name = None
                     id_set.add(obj_meta.object_id)
-                    #known_faces_indexes = get_known_faces_indexes(camera_id)
-                    if classify_to_known_and_unknown(camera_id, frame_image, obj_meta.object_id, name, program_action, obj_meta.confidence, fake_frame_number, delta, default_similarity, known_face_metadata, known_face_encodings):
+                    known_faces_indexes = get_known_faces_indexes(camera_id)
+                    if classify_to_known_and_unknown(camera_id, frame_image, obj_meta.object_id, name, program_action, obj_meta.confidence, fake_frame_number, delta, default_similarity, known_faces_indexes, known_face_metadata, known_face_encodings):
                         save_image = True
                         #cv2.imwrite('/tmp/found_elements/found_multiple_' + str(fake_frame_number) + ".jpg", frame_image)
             try: 
