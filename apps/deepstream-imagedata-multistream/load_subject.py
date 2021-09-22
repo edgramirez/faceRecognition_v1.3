@@ -6,116 +6,30 @@ param_length = len(sys.argv)
 home_dir = com.HOMEDIR
 
 
-msg = 'Usage: ' + sys.argv[0] + ' blacklist | whitelist | readSilence | findImg | findVideo | compareData | appendTo'
+msg = 'Usage: ' + sys.argv[0] + ' newBlackList | newWhitelist | addToBlackList | addToWhiteList | remoteBlackList | removeWhiteList '
 
 if param_length < 2:
     com.log_error(msg)
 
-if sys.argv[1] == 'blacklist':
+if sys.argv[1] == 'newBlackList':
     if param_length == 2:
         known_faces = 'data/black_list'
         data_file = home_dir + '/BlackList.dat'
-    elif param_length == 4 and sys.argv[3] == 'output':
-        known_faces = sys.argv[2]
-        pickle_file = sys.argv[4]
     else:
         com.log_error(msg)
 
     import lib.biblioteca as biblio 
     com.create_data_dir()
-    biblio.encode_known_faces_from_images_in_dir(known_faces, data_file, sys.argv[1])
-elif sys.argv[1] == 'whitelist':
+    biblio.encode_known_faces_from_images_in_dir(known_faces, data_file, 'blacklist')
+elif sys.argv[1] == 'newWhiteList':
     if param_length == 2:
         known_faces = 'data/white_list'
         data_file = home_dir + '/WhiteList.dat'
-    elif param_length == 4 and sys.argv[3] == 'output':
-        known_faces = sys.argv[2]
-        pickle_file = sys.argv[4]
     else:
         com.log_error(msg)
 
     import lib.biblioteca as biblio 
     com.create_data_dir()
-    biblio.encode_known_faces_from_images_in_dir(known_faces, data_file, sys.argv[1])
-elif sys.argv[1] == 'appendTo':
-    if param_length == 2:
-        known_faces = 'data/load'
-        data_file = 'data/encoded_known_faces/knownFaces.dat'
-    elif param_length == 4 and sys.argv[3] == 'output':
-        known_faces = sys.argv[2]
-        data_file = sys.argv[4]
-    else:
-        com.log_error(msg)
-
-    import lib.biblioteca as biblio 
-    #biblio.encode_known_faces(known_faces, data_file, False)
-    biblio.encode_known_faces_from_images_in_dir(known_faces, data_file, False)
-elif sys.argv[1] == 'findImg':
-    if param_length == 2:
-        image_dir = 'data/find'
-        data_file = 'data/encoded_known_faces/knownFaces.dat'
-    elif param_length == 5 and sys.argv[3] == 'input':
-        image_dir = sys.argv[2]
-        data_file = sys.argv[4]
-    else:
-        com.log_error(msg)
-
-    import lib.biblioteca as biblio 
-    biblio.compare_pickle_against_unknown_images(data_file, image_dir)
-elif sys.argv[1] == 'readVideo':
-    if param_length == 2:
-        video_input = 'data/video/test_video.mp4'
-        data_file = 'data/video_encoded_faces/test_video_default.data'
-    elif param_length == 5 and sys.argv[3] == 'input':
-        image_dir = sys.argv[2]
-        pickle_file = sys.argv[4]
-    else:
-        com.log_error(msg)
-
-    import lib.biblioteca as biblio 
-    kwargs = {}
-    biblio.read_video(video_input, data_file, **kwargs)
-elif sys.argv[1] == 'readSilence':
-    if param_length == 2:
-        video_input = 'data/video/test_video.mp4'
-        data_file = 'data/video_encoded_faces/test_video_default.data'
-    elif param_length == 5 and sys.argv[3] == 'input':
-        image_dir = sys.argv[2]
-        pickle_file = sys.argv[4]
-    else:
-        com.log_error(msg)
-
-    import lib.biblioteca as biblio 
-    kwargs = {'silence': True}
-    biblio.read_video(video_input, data_file, **kwargs)
-elif sys.argv[1] == 'findVideo':
-    if param_length == 2:
-        video_input = 'data/video/test_video.mp4'
-        data_file = 'data/encoded_known_faces/knownFaces.dat'
-    elif param_length == 5 and sys.argv[3] == 'known_data':
-        image_dir = sys.argv[2]
-        pickle_file = sys.argv[4]
-    else:
-        com.log_error(msg)
-
-    import lib.biblioteca as biblio
-    kwargs = {'find': True}
-    biblio.read_video(video_input, data_file, **kwargs)
-elif sys.argv[1] == 'compareData':
-    if param_length == 2:
-        video_data_file = 'data/video_encoded_faces/test_video_default.data'
-        known_data_file = 'data/encoded_known_faces/knownFaces.dat'
-    elif param_length == 5 and sys.argv[3] == 'known_data':
-        image_dir = sys.argv[2]
-        pickle_file = sys.argv[4]
-    else:
-        com.log_error(msg)
-
-    import lib.biblioteca as biblio
-
-    similarity_level = {'looks_like': .8, 'like': .6, 'similar': .4, 'very_similar': .3, 'match': .2}
-    find_levels = [similarity_level['looks_like'], similarity_level['like'], similarity_level['similar'], similarity_level['very_similar'], similarity_level['match']]
-    #biblio.compare_data(video_data_file, known_data_file, .6)
-    biblio.compare_data(video_data_file, known_data_file, find_levels)
+    biblio.encode_known_faces_from_images_in_dir(known_faces, data_file, 'whitelist')
 else:
     com.log_error(msg)
