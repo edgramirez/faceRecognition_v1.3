@@ -5,8 +5,7 @@ import lib.common as com
 param_length = len(sys.argv)
 home_dir = com.HOMEDIR
 
-
-msg = 'Usage: ' + sys.argv[0] + ' newBlackList | newWhitelist | addToBlackList | addToWhiteList | remoteBlackList | removeWhiteList '
+msg = 'Usage: ' + sys.argv[0] + ' newBlackList | newWhiteList | addToBlackList | addToWhiteList | remoteBlackList | removeWhiteList '
 
 if param_length < 2:
     com.log_error(msg)

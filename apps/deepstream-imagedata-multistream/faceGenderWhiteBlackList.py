@@ -814,7 +814,6 @@ def main(args):
     GObject.threads_init()
     Gst.init(None)
 
-
     #Emulate reading the information from the server
     '''
     En este punto asumimos que ya se cargaron la funente es decir video o rtsp etc y los valorres se cargaron

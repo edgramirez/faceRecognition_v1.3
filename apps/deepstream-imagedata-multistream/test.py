@@ -5,6 +5,18 @@ from os import walk
 import cv2
 
 
+'''
+# TODO
+
+options:
+
+
+addToBlackList / addToWhiteList   - to append new elements to whatever elements are already present
+remoteBlackList / removeWhiteList - to remove the list of elements pass as parameters
+
+Usage: ./load_subject.py newBlackList | newWhitelist | addToBlackList | addToWhiteList | remoteBlackList | removeWhiteList
+
+'''
 
 
 def log_error(msg, _quit=True):
