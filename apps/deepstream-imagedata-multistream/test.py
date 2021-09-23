@@ -6,6 +6,7 @@ import cv2
 
 
 
+
 def log_error(msg, _quit=True):
     print("-- PARAMETER ERROR --\n"*5)
     print(" %s \n" % msg)
