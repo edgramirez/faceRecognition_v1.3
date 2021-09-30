@@ -761,9 +761,9 @@ def cb_newpad(decodebin, decoder_src_pad,data):
             # Get the source bin ghost pad
             bin_ghost_pad=source_bin.get_static_pad("src")
             if not bin_ghost_pad.set_target(decoder_src_pad):
-                sys.stderr.write("Failed to link decoder src pad to source bin ghost pad\n")
+                com.log_error("Failed to link decoder src pad to source bin ghost pad\n")
         else:
-            sys.stderr.write(" Error: Decodebin did not pick nvidia decoder plugin.\n")
+            com.log_error(" Error: Decodebin did not pick nvidia decoder plugin.\n")
 
 def decodebin_child_added(child_proxy,Object,name,user_data):
     print("Decodebin child added:", name, "\n")
@@ -782,14 +782,14 @@ def create_source_bin(index,uri):
     print(bin_name)
     nbin=Gst.Bin.new(bin_name)
     if not nbin:
-        sys.stderr.write(" Unable to create source bin \n")
+        com.log_error(" Unable to create source bin \n")
 
     # Source element for reading from the uri.
     # We will use decodebin and let it figure out the container format of the
     # stream and the codec and plug the appropriate demux and decode plugins.
     uri_decode_bin=Gst.ElementFactory.make("uridecodebin", "uri-decode-bin")
     if not uri_decode_bin:
-        sys.stderr.write(" Unable to create uri decode bin \n")
+        com.log_error(" Unable to create uri decode bin \n")
     # We set the input uri to the source element
     uri_decode_bin.set_property("uri",uri)
     # Connect to the "pad-added" signal of the decodebin which generates a
@@ -805,14 +805,14 @@ def create_source_bin(index,uri):
     Gst.Bin.add(nbin,uri_decode_bin)
     bin_pad=nbin.add_pad(Gst.GhostPad.new_no_target("src",Gst.PadDirection.SRC))
     if not bin_pad:
-        sys.stderr.write(" Failed to add ghost pad in source bin \n")
+        com.log_error(" Failed to add ghost pad in source bin \n")
         return None
     return nbin
 
 def main(args):
     # Check input arguments
     if len(args) < 2:
-        sys.stderr.write("usage: %s <uri1> [uri2] ... [uriN] <folder to save frames>\n" % args[0])
+        com.log_error("usage: %s <uri1> [uri2] ... [uriN] <folder to save frames>\n" % args[0])
         sys.exit(1)
     print("Argumentos :",args)
 
@@ -825,7 +825,7 @@ def main(args):
     folder_name=args[-1]
     print(folder_name)
     if path.exists(folder_name):
-        sys.stderr.write("The output folder %s already exists. Please remove it first.\n" % folder_name)
+        com.log_error("The output folder %s already exists. Please remove it first.\n" % folder_name)
         sys.exit(1)
     else:
         os.mkdir(folder_name)
@@ -867,13 +867,13 @@ def main(args):
     is_live = False
 
     if not pipeline:
-        sys.stderr.write(" Unable to create Pipeline \n")
+        com.log_error(" Unable to create Pipeline \n")
     print("Creating streamux \n ")
 
     # Create nvstreammux instance to form batches from one or more sources.
     streammux = Gst.ElementFactory.make("nvstreammux", "Stream-muxer")
     if not streammux:
-        sys.stderr.write(" Unable to create NvStreamMux \n")
+        com.log_error(" Unable to create NvStreamMux \n")
 
     pipeline.add(streammux)
     for i in range(number_sources):
@@ -886,27 +886,27 @@ def main(args):
             is_live = True
         source_bin=create_source_bin(i, uri_name)
         if not source_bin:
-            sys.stderr.write("Unable to create source bin \n")
+            com.log_error("Unable to create source bin \n")
         pipeline.add(source_bin)
         padname="sink_%u" %i
         sinkpad= streammux.get_request_pad(padname) 
         if not sinkpad:
-            sys.stderr.write("Unable to create sink pad bin \n")
+            com.log_error("Unable to create sink pad bin \n")
         srcpad=source_bin.get_static_pad("src")
         if not srcpad:
-            sys.stderr.write("Unable to create src pad bin \n")
+            com.log_error("Unable to create src pad bin \n")
         srcpad.link(sinkpad)
     print("Creating Pgie \n ")
     pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
     if not pgie:
-        sys.stderr.write(" Unable to create pgie \n")
+        com.log_error(" Unable to create pgie \n")
     
     # Creation of tracking to follow up the model face
     # April 21th
     # ERM
     tracker = Gst.ElementFactory.make("nvtracker", "tracker")
     if not tracker:
-        sys.stderr.write(" Unable to create tracker \n")
+        com.log_error(" Unable to create tracker \n")
     
     
     # Add nvvidconv1 and filter1 to convert the frames to RGBA
@@ -914,30 +914,30 @@ def main(args):
     print("Creating nvvidconv1 \n ")
     nvvidconv1 = Gst.ElementFactory.make("nvvideoconvert", "convertor1")
     if not nvvidconv1:
-        sys.stderr.write(" Unable to create nvvidconv1 \n")
+        com.log_error(" Unable to create nvvidconv1 \n")
     print("Creating filter1 \n ")
     caps1 = Gst.Caps.from_string("video/x-raw(memory:NVMM), format=RGBA")
     filter1 = Gst.ElementFactory.make("capsfilter", "filter1")
     if not filter1:
-        sys.stderr.write(" Unable to get the caps filter1 \n")
+        com.log_error(" Unable to get the caps filter1 \n")
     filter1.set_property("caps", caps1)
     print("Creating tiler \n ")
     tiler=Gst.ElementFactory.make("nvmultistreamtiler", "nvtiler")
     if not tiler:
-        sys.stderr.write(" Unable to create tiler \n")
+        com.log_error(" Unable to create tiler \n")
     print("Creating nvvidconv \n ")
     nvvidconv = Gst.ElementFactory.make("nvvideoconvert", "convertor")
     if not nvvidconv:
-        sys.stderr.write(" Unable to create nvvidconv \n")
+        com.log_error(" Unable to create nvvidconv \n")
     print("Creating nvosd \n ")
     nvosd = Gst.ElementFactory.make("nvdsosd", "onscreendisplay")
     if not nvosd:
-        sys.stderr.write(" Unable to create nvosd \n")
+        com.log_error(" Unable to create nvosd \n")
     if(is_aarch64()):
         print("Creating transform \n ")
         transform=Gst.ElementFactory.make("nvegltransform", "nvegl-transform")
         if not transform:
-            sys.stderr.write(" Unable to create transform \n")
+            com.log_error(" Unable to create transform \n")
 
     print("Creating EGLSink \n")
     # edgar: cambio esta linea para no desplegar video - 
@@ -945,7 +945,7 @@ def main(args):
     sink = Gst.ElementFactory.make("fakesink", "fakesink")
 
     if not sink:
-        sys.stderr.write(" Unable to create egl sink \n")
+        com.log_error(" Unable to create egl sink \n")
 
     if is_live:
         print("Atleast one of the sources is live")
@@ -1053,13 +1053,13 @@ def main(args):
 
     #tiler_sink_pad=tiler.get_static_pad("sink")
     #if not tiler_sink_pad:
-    #    sys.stderr.write(" Unable to get src pad \n")
+    #    com.log_error(" Unable to get src pad \n")
     #else:
     #    tiler_sink_pad.add_probe(Gst.PadProbeType.BUFFER, tiler_sink_pad_buffer_probe, 0)
     
     tiler_src_pad=tiler.get_static_pad("src")
     if not tiler_src_pad:
-        sys.stderr.write(" Unable to get src pad \n")
+        com.log_error(" Unable to get src pad \n")
     else:
         tiler_src_pad.add_probe(Gst.PadProbeType.BUFFER, tiler_src_pad_buffer_probe, 0)
 
