@@ -3,6 +3,7 @@ import time
 import fcntl
 import struct
 import socket
+from pathlib import Path
 from os import walk
 
 
@@ -11,18 +12,20 @@ source_type = {'IMAGE': 'image', 'RTSP': 'rtsp', 'VIDEO': 'video'}
 IMAGE_GROUPS = ('blacklist', 'whitelist')
 
 # home directory + directory to get data and store results 
-DATA_AND_RESULTS = '/face_recognition_data_and_results'
-HOMEDIR = os.environ['HOME'] + DATA_AND_RESULTS
-SERVER_URI = 'https://mit.kairosconnect.app/'
+#DATA_AND_RESULTS = '/face_recognition_data_and_results'
+#HOMEDIR = os.environ['HOME'] + DATA_AND_RESULTS
+#SERVER_URI = 'https://mit.kairosconnect.app/'
 
 
-def create_data_dir():
-    path = os.environ['HOME'] +  DATA_AND_RESULTS
+def dir_exists(path):
+    path = Path()
+    return path.exists()
 
-    try:
-        os.mkdir(path)
-    except FileExistsError as e:
-        print("Directory {} already created".format(path))
+
+def create_data_dir(path_str):
+    path = Path(path_str)
+    path.mkdir(parents=True, exist_ok=True)
+    return True
 
 
 def log_error(msg, _quit = True):
@@ -33,6 +36,10 @@ def log_error(msg, _quit = True):
         quit()
     else:
         return False
+
+
+def log_debug(msg):
+    print("------- %s -------\n" % msg)
 
 
 def file_exists(file_name):

@@ -14,7 +14,7 @@ global header
 global srv_url
 
 font = cv2.FONT_HERSHEY_SIMPLEX
-srv_url = 'https://mit.kairosconnect.app/'
+srv_url = os.environ['USER_SERVER_ENDPOINT']
 header = None
 
 ##### GENERIC FUNCTIONS
@@ -26,15 +26,15 @@ def get_supported_actions():
 
 def set_header(token_file = None):
     if token_file is None:
-        token_file = '../.token'
-    global header
-    if header is None:
-        if isinstance(token_file, str):
-            token_handler = com.open_file(token_file, 'r+')
-            if token_handler:
-                header = {'Content-type': 'application/json', 'X-KAIROS-TOKEN': token_handler.read().split('\n')[0]}
-                print('Header correctly set')
-                return True
+        token_file = os.environ['FACE_RECOGNITION_TOKEN']
+
+    if file_exists(token_file):
+        global header
+        token_handler = com.open_file(token_file, 'r+')
+        header = {'Content-type': 'application/json', 'X-KAIROS-TOKEN': token_handler.read().split('\n')[0]}
+        print('Header correctly set')
+        return True
+
     return False
 
 
@@ -259,6 +259,9 @@ def encode_known_faces_from_images_in_dir(image_path, output_file, image_group =
     '''
     Esta funccion codifica los rostros encotrados en las imagenes presentes en el diretorio especificado
     '''
+    if com.dir_exists(image_path) is False:
+        com.log_error("Directory '{}' does not exist".format(image_path))
+
     files, root = com.read_images_in_dir(image_path)
     known_face_metadata = []
     known_face_encodings = []
