@@ -45,6 +45,7 @@ import os.path
 from os import path
 import lib.biblioteca as biblio
 import lib.common as com
+import lib.validate as validate
 import face_recognition
 from datetime import datetime, timedelta
 
@@ -847,11 +848,16 @@ def create_source_bin(index,uri):
     return nbin
 
 def main(args):
+    scfg = biblio.get_server_info()
+    validate.validate_find(scfg)
+    '''
     # Check input arguments
     if len(args) < 2:
         com.log_error("usage: %s <uri1> [uri2] ... [uriN] <folder to save frames>\n" % args[0])
         sys.exit(1)
     print("Argumentos :",args)
+    '''
+
 
     for i in range(0,len(args)-2):
         fps_streams["stream{0}".format(i)]=GETFPS(i)
@@ -884,8 +890,7 @@ def main(args):
     De la misma forma los rostros que se quieran cargar puedes cargarse por configuracion indicando explicitamente
     los nombres de los archivos
     '''
-    #scfg = biblio.get_server_info()
-    #print(scfg)
+    
     camera_id = 'FA:KE:MA:C:AD:DR:ES:S9'
     set_action(camera_id, 'read')
     set_action(camera_id, 'find')
