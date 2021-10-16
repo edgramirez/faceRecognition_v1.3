@@ -8,6 +8,7 @@ from os import walk
 import face_recognition
 import numpy as np
 import lib.common as com
+import lib.validate as validate
 from datetime import datetime, timedelta
 
 global header
@@ -28,7 +29,7 @@ def set_header(token_file = None):
     if token_file is None:
         token_file = os.environ['FACE_RECOGNITION_TOKEN']
 
-    if file_exists(token_file):
+    if com.file_exists(token_file):
         global header
         token_handler = com.open_file(token_file, 'r+')
         header = {'Content-type': 'application/json', 'X-KAIROS-TOKEN': token_handler.read().split('\n')[0]}
@@ -38,11 +39,12 @@ def set_header(token_file = None):
     return False
 
 
-def get_server_info(abort_if_exception = True, quit_program = True):
+def get_server_info_from_server(abort_if_exception = True, quit_program = True):
     global srv_url
     url = srv_url + 'tx/device.getConfigByProcessDevice'
     for machine_id in com.get_machine_macaddresses():
         #machine_id = '00:04:4b:eb:f6:dd'  # HARDCODED MACHINE ID
+        #print('machine_id: ', machine_id)
         data = {"id": machine_id}
         
         if abort_if_exception:
@@ -50,10 +52,37 @@ def get_server_info(abort_if_exception = True, quit_program = True):
         else:
             options = {'abort_if_exception': False}
             response = send_json(data, 'POST', url, **options)
-    if response:
-        return json.loads(response.text)
-    else:
-        return com.log_error("Unable to retrieve the device configuration from the server. Server response".format(response), quit_program = quit_program)
+        
+        if response.status_code == 200:
+            if json.loads(response.text)['ERROR']:
+                com.log_debug("Server answered with errors: {}".format(json.loads(response.text)))
+                return False
+            return json.loads(response.text).keys()
+        else:
+            return com.log_error("Unable to retrieve the device configuration from the Server. Server response".format(response), quit_program = quit_program)
+
+
+def get_server_info_from_file(file_path, abort_if_exception = True):
+    if com.file_exists(file_path):
+        com.log_debug('Using local {} to get the service config'.format(file_path))
+        with open(file_path) as json_file_handler:
+            data = json.load(json_file_handler)
+            if isinstance(data, dict):
+                return data
+    if abort_if_exception:
+        return com.log_error("Unable to retrieve the device configuration from local file: {}".format(file_path), quit_program = abort_if_exception)
+    return False
+
+
+def get_server_info(abort_if_exception = True, quit_program = True):
+    scfg = get_server_info_from_server(abort_if_exception, quit_program)
+    if scfg is False:
+        scfg = get_server_info_from_file('configs/Server_Emulatation_configs_from_Excel.py', abort_if_exception)
+
+    # check the return information is actually for this machine by comparing the ID
+    validate.validate_find(scfg)
+
+    return scfg
 
 
 def send_json(payload, action, url = None, **options):
