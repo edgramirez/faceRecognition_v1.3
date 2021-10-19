@@ -849,7 +849,7 @@ def create_source_bin(index,uri):
 
 def main(args):
     scfg_list = biblio.get_server_info()
-    print(scfg_list)
+    #print(scfg_list)
     '''
     # Check input arguments
     if len(args) < 2:
@@ -865,18 +865,24 @@ def main(args):
 
     #number_sources = len(args)-2
     number_sources = len(scfg_list)
-    print("Numero de fuentes :", number_sources)
-    print(fps_streams)
+    com.log_debug("Numero de fuentes :{}".format(number_sources))
+    print("\n------ Fps_streams: ", fps_streams, "------")
 
-    # Parace no ser necesario
-    #global folder_name
+    global folder_name
     #folder_name = args[-1]
-    #if path.exists(folder_name):
-    #    com.log_error("The output folder %s already exists. Please remove it first.\n" % folder_name)
-    #    sys.exit(1)
-    #else:
-    #    os.mkdir(folder_name)
-    #    print("Frames will be saved in ", folder_name)
+    folder_name = com.TMP_RESULTS_DIR
+    if path.exists(folder_name):
+        if com.DELETE_PREVIOUS_TMP_RESULTS:
+            com.log_debug('Automatically deleting the previous Tmp directory at: {}'.format(folder_name))
+        else:
+            com.log_debug("To automatically delete the Tmp folder, setup the environment variable like this: export DELETE_PREVIOUS_TMP_RESULTS=True")
+            com.log_error("The output folder %s already exists. Please remove it first." % folder_name)
+            sys.exit(1)
+    else:
+        os.mkdir(folder_name)
+        com.log_debug("Frames will be saved in ", folder_name)
+        com.create_data_dir(folder_name)
+    quit()
 
     # Standard GStreamer initialization
     GObject.threads_init()
@@ -899,7 +905,6 @@ def main(args):
     set_action(camera_id, 'read')
     set_action(camera_id, 'find')
     action = get_action(camera_id)
-    #com.create_data_dir()
 
     if action == action_types['read']:
         set_read_pamameters(camera_id)
@@ -934,10 +939,10 @@ def main(args):
         #os.mkdir(folder_name+"/stream_"+str(i))
         frame_count["stream_"+str(i)]=0
         saved_count["stream_"+str(i)]=0
-        print("Creating source_bin: {} with uri: {}\n".format(i, scfg_list[i]['source']))
         uri_name = scfg_list[i]['source']
         #uri_name=args[i+1]
-        print('uri_name', args[i+1])
+        #print('uri_name', uri_name)
+        print("Creating source_bin: {} with uri_name: {}\n".format(i, uri_name))
         if uri_name.find("rtsp://") == 0 :
             is_live = True
         source_bin=create_source_bin(i, uri_name)
