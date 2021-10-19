@@ -13,9 +13,15 @@ IMAGE_GROUPS = ('blacklist', 'whitelist')
 
 # home directory + directory to get data and store results 
 #DATA_AND_RESULTS = '/face_recognition_data_and_results'
-RESULTS_DIR        = os.environ['RESULTS_DIRECTORY']
-INPUT_DB_DIRECTORY = os.environ['INPUT_DB_DIRECTORY']
 #SERVER_URI = 'https://mit.kairosconnect.app/'
+RESULTS_DIR                 = os.environ['RESULTS_DIRECTORY']
+INPUT_DB_DIRECTORY          = os.environ['INPUT_DB_DIRECTORY']
+TMP_RESULTS_DIR             = os.environ['TMP_RESULTS_DIR']
+try:
+    DELETE_PREVIOUS_TMP_RESULTS = os.environ['DELETE_PREVIOUS_TMP_RESULTS']
+except KeyError:
+    print('\nSetting up "DELETE_PREVIOUS_TMP_RESULTS" variable to "False" by default')
+    DELETE_PREVIOUS_TMP_RESULTS = False
 
 
 def dir_exists(path):
@@ -30,9 +36,11 @@ def create_data_dir(path_str):
 
 
 def log_error(msg, _quit = True):
-    print("-- PARAMETER ERROR --\n"*5)
-    print(" %s \n" % msg)
-    print("-- PARAMETER ERROR --\n"*5)
+    print("\n")
+    print("-- PARAMETER ERROR --\n"*2)
+    print(" %s " % msg)
+    print("-- PARAMETER ERROR --\n"*2)
+    print("\n")
     if _quit:
         quit()
     else:
