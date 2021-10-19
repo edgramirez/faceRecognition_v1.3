@@ -18,72 +18,106 @@ SERVICE_DEFINITION = {
     }
 
 
-def mac_address_in_config(mac_config):
-    for machine_id in com.get_machine_macaddresses():
-        if mac_config == machine_id: 
-            return True
-    return False
+def validate_source(data):
+    '''
+    Validate the configuration source recovered from server contains correct values
+    '''
+    data['source'] = ''
+    if item in data.keys() and str(type(data[item])).split("'")[1] != service_definition['optional'][item]:
+        com.log_error("      Configuration error - Parameter '{}' value must be type : {}, Current value: {}".format(item, service_definition['optional'][item], str(type(data[item])).split("'")[1]))
+    com.log_debug("Source is OK")
+    return True
 
-def check_service_keys(data):
-    if not isinstance(data, dict):
-        com.log_error("Configuration error - data must be a dictionary - type: {} / content: {}".format(type(data), data))
 
-    # double validation config is for this mathine
-    config_content = {}
-    for key in data.keys():
-        if mac_address_in_config(key):
-            config_content = data[key]
-            break
+def check_service_against_definition(data):
+    if not isinstance(data, list):
+        com.log_error("Configuration error - data must be a list of dictionaries - type: {} / content: {}".format(type(data), data))
 
-    if len(config_content) == 0:
-        com.log_error("The provided configuration does not match this server")
+    for dictionary in data:
+        com.log_debug("Validating config of service: '--{}--' against the definition".format(dictionary['serviceType']))
+        check_obligatory_keys(dictionary, SERVICE_DEFINITION[dictionary['serviceType']])
+        check_optional_keys(dictionary, SERVICE_DEFINITION[dictionary['serviceType']])
 
-    # check all requested services provided by the configuration are actually offered by AVAILABLE_SERVICES
-    for service_name in config_content.keys():
-        if service_name not in AVAILABLE_SERVICES:
-            com.log_error("Configuration error - Requested service: {} / available services: {}".format(type(service_name), AVAILABLE_SERVICES))
-
-    # check the keys and its values match the coded definition in "SERVICE_DEFINITION"
-    for item in config_content.keys():
-        com.log_debug("Validating config of service: '--{}--' against the definition".format(item))
-        check_obligatory_keys(config_content[item], SERVICE_DEFINITION[item])
-        check_optional_keys(config_content[item], SERVICE_DEFINITION[item])
-
-    quit()
     return True
 
 
 def check_obligatory_keys(data, service_definition):
+    '''
+    Validate the configuration recovered from server provided the defined minimum parameters and their values are valid
+    '''
     for item in service_definition['obligaroty'].keys():
         if item not in data.keys():
-            com.log_error("      Configuration error - Missing Obligatory parameter: {}".format(item))
+            com.log_error("Configuration error - Missing Obligatory parameter: {}".format(item))
         if str(type(data[item])).split("'")[1] != service_definition['obligaroty'][item]:
-            com.log_error("      Configuration error - Parameter '{}' value must be type : {}, Current value: {}".format(item, service_definition['obligaroty'][item], str(type(data[item])).split("'")[1]))
-    com.log_debug("      All obligatory parameters are OK")
+            com.log_error("Configuration error - Parameter '{}' value must be type : {}, Current value: {}".format(item, service_definition['obligaroty'][item], str(type(data[item])).split("'")[1]))
+    com.log_debug("All obligatory parameters are OK")
     return True
 
 
 def check_optional_keys(data, service_definition):
+    '''
+    Validate the optional configuration recovered from server and its values
+    '''
     for item in service_definition['optional'].keys():
         if item in data.keys() and str(type(data[item])).split("'")[1] != service_definition['optional'][item]:
                 com.log_error("      Configuration error - Parameter '{}' value must be type : {}, Current value: {}".format(item, service_definition['optional'][item], str(type(data[item])).split("'")[1]))
 
-    com.log_debug("      All optional parameters are OK")
+    com.log_debug("All optional parameters are OK")
     return True
 
 
-def validate_find(data):
-    check_service_keys(data)
+def validate_service_exits(data):
+    for element in data:
+        com.log_debug('Checking service: "{}" exists'.format(element['serviceType']))
+        if element['serviceType'] not in AVAILABLE_SERVICES:
+            com.log_error("Configuration error - Requested service: {} - Available services: {}".format(element['serviceType'], AVAILABLE_SERVICES))
+    return True
 
-    #optional_config_keys = ['checkBlackList', 'checkWhieteList', 'ignorePreviousDb', 'saveFacesDb']
-    #check_optional_keys(data, optional_config_keys)
-    quit()
 
-    if 'enabled' not in data.keys():
-        com.error_msg('Key element enabled does not exists in the data provided:\n\n {}'.format(data))
-    else:
-        if not isinstance(data['enabled'], str):
-            com.error_msg("'aforo_data' parameter, most be True or False, current value: {}".format(data['enabled']))
+def get_config_filtered_by_active_service(config_data):
+    active_services = []
+    for key in config_data.keys():
+        com.log_debug("Checking if service '{}/{}' is active".format(key, config_data[key]['serviceType']))
+        print(key, config_data[key]['serviceType'], config_data[key]['enabled'])
+        if config_data[key]['enabled']:
+            print('aqui..',key)
+            active_services.append(config_data[key])
+
+    print(active_services)
+    if len(active_services) < 1:
+        com.log_error("\nConfiguration does not contain any active service for this server: \n\n{}".format(config_data))
+    return active_services
+
+
+def mac_address_in_config(mac_config):
+    for machine_id in com.get_machine_macaddresses():
+        if mac_config == machine_id:
+            return True
+    return False
+
+
+def get_config_filtered_by_local_mac(config_data):
+    services_data = {}
+    for key in config_data.keys():
+        if mac_address_in_config(key):
+            return config_data[key]
+    com.log_error("The provided configuration does not match any of server interfaces mac address")
+
+
+def parse_parameters_and_values_from_config(config_data):
+    # filter config and get only data for this server using the mac to match
+    scfg = get_config_filtered_by_local_mac(config_data)
+
+    # filter config and get only data of active services
+    scfg = get_config_filtered_by_active_service(scfg)
+
+    # validate requested services exists in code
+    validate_service_exits(scfg)
+
+    # Check all obligatory and optional parameters and values types provided by the dashboard config
+    check_service_against_definition(scfg)
+
+    return scfg
 
     if 'reference_line_coordinates' in data.keys():
         reference_line_coordinates = data['reference_line_coordinates']
