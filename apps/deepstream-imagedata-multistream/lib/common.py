@@ -13,7 +13,8 @@ IMAGE_GROUPS = ('blacklist', 'whitelist')
 
 # home directory + directory to get data and store results 
 #DATA_AND_RESULTS = '/face_recognition_data_and_results'
-#HOMEDIR = os.environ['HOME'] + DATA_AND_RESULTS
+RESULTS_DIR        = os.environ['RESULTS_DIRECTORY']
+INPUT_DB_DIRECTORY = os.environ['INPUT_DB_DIRECTORY']
 #SERVER_URI = 'https://mit.kairosconnect.app/'
 
 
