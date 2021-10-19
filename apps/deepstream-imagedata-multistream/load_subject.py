@@ -5,7 +5,7 @@ from pathlib import Path
 import lib.common as com
 
 param_length = len(sys.argv)
-base_input_dir = os.environ['INPUT_DB_DIRECTORY']
+base_input_dir = com.INPUT_DB_DIRECTORY
 
 msg = 'Usage: ' + sys.argv[0] + ' newBlackList | newWhiteList | addToBlackList | addToWhiteList | remoteBlackList | removeWhiteList '
 
@@ -22,7 +22,7 @@ if sys.argv[1] == 'newBlackList':
     else:
         com.log_error(msg)
 
-    com.create_data_dir(os.environ['RESULTS_DIRECTORY'])
+    com.create_data_dir(com.RESULTS_DIRECTORY)
     com.log_debug("Saving data in directory: {}".format(blacklist_results_dir))
 
     import lib.biblioteca as biblio 
@@ -37,7 +37,7 @@ elif sys.argv[1] == 'newWhiteList':
     else:
         com.log_error(msg)
 
-    com.create_data_dir(os.environ['RESULTS_DIRECTORY'])
+    com.create_data_dir(com.RESULTS_DIRECTORY)
     com.log_debug("Saving data in directory: {}".format(whitelist_results_dir))
 
     import lib.biblioteca as biblio 
