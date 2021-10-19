@@ -3,6 +3,8 @@ import time
 import fcntl
 import struct
 import socket
+import sys
+import shutil
 from pathlib import Path
 from os import walk
 
@@ -24,8 +26,8 @@ except KeyError:
     DELETE_PREVIOUS_TMP_RESULTS = False
 
 
-def dir_exists(path):
-    path = Path()
+def dir_exists(path_str):
+    path = Path(path_str)
     return path.exists()
 
 
@@ -35,10 +37,29 @@ def create_data_dir(path_str):
     return True
 
 
+def delete_tree(path_str, match_pattern = None):
+    if dir_exists(path_str):
+        # Before deleting check if the path match the pattern
+        if match_pattern is not None and path_str[0:len(match_pattern)] != match_pattern:
+            log_error("Unable to delete the requested directory: {}, match pattern requests that the path must start with: {}".format(path_str, match_pattern))
+        try:
+            shutil.rmtree(match_pattern)
+            return True
+        except OSError as e:
+            print("Error: {} - {}. (Unable to delete path '{}')".format(e.filename, e.strerror, path_str))
+            import subprocess
+            cmd = "rm -rf " + match_pattern
+            print(cmd)
+            #os.system(cmd)
+    else:
+        log_debug("Directory path '{}' does not exist, nothing to do".format(path_str))
+
+
 def log_error(msg, _quit = True):
     print("\n")
     print("-- PARAMETER ERROR --\n"*2)
     print(" %s " % msg)
+    print("\n")
     print("-- PARAMETER ERROR --\n"*2)
     print("\n")
     if _quit:
