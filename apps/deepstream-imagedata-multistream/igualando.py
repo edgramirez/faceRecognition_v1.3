@@ -143,7 +143,7 @@ def get_group_type(camera_id):
 
 def set_read_pamameters(camera_id):
     encodings, metadata = [], []
-    output_db_name = com.HOMEDIR + '/test_video_default.data'
+    output_db_name = com.RESULTS_DIR + '/test_video_default.data'
 
     if com.file_exists_and_not_empty(output_db_name):
         encodings, metadata = biblio.read_pickle(output_db_name)
@@ -154,12 +154,12 @@ def set_read_pamameters(camera_id):
 
 def set_find_parameters(camera_id, group_type):
     encodings, metadata = [], []
-    output_db_name = com.HOMEDIR + '/found_faces_db.dat'
+    output_db_name = com.RESULTS_DIR + '/found_faces_db.dat'
 
     if group_type == com.IMAGE_GROUPS[0]:
-        db_name = com.HOMEDIR + '/BlackList.dat'
+        db_name = com.INPUT_DB_DIRECTORY + '/blacklist_db/BlackList.dat'
     else:
-        db_name = com.HOMEDIR + '/WhiteList.dat'
+        db_name = com.INPUT_DB_DIRECTORY + '/whitelist_db/WhiteList.dat'
 
     if com.file_exists(db_name):
         set_output_db_name(camera_id, output_db_name)
@@ -848,8 +848,8 @@ def create_source_bin(index,uri):
     return nbin
 
 def main(args):
-    scfg = biblio.get_server_info()
-    validate.validate_find(scfg)
+    scfg_list = biblio.get_server_info()
+    print(scfg_list)
     '''
     # Check input arguments
     if len(args) < 2:
@@ -857,22 +857,26 @@ def main(args):
         sys.exit(1)
     print("Argumentos :",args)
     '''
+    for i in range(len(scfg_list)):
+        fps_streams["stream{0}".format(i)] = GETFPS(i)
 
+    #for i in range(0,len(args)-2):
+    #    fps_streams["stream{0}".format(i)]=GETFPS(i)
 
-    for i in range(0,len(args)-2):
-        fps_streams["stream{0}".format(i)]=GETFPS(i)
-    number_sources=len(args)-2
+    #number_sources = len(args)-2
+    number_sources = len(scfg_list)
     print("Numero de fuentes :", number_sources)
+    print(fps_streams)
 
-    global folder_name
-    folder_name=args[-1]
-    print(folder_name)
-    if path.exists(folder_name):
-        com.log_error("The output folder %s already exists. Please remove it first.\n" % folder_name)
-        sys.exit(1)
-    else:
-        os.mkdir(folder_name)
-        print("Frames will be saved in ", folder_name)
+    # Parace no ser necesario
+    #global folder_name
+    #folder_name = args[-1]
+    #if path.exists(folder_name):
+    #    com.log_error("The output folder %s already exists. Please remove it first.\n" % folder_name)
+    #    sys.exit(1)
+    #else:
+    #    os.mkdir(folder_name)
+    #    print("Frames will be saved in ", folder_name)
 
     # Standard GStreamer initialization
     GObject.threads_init()
@@ -895,7 +899,7 @@ def main(args):
     set_action(camera_id, 'read')
     set_action(camera_id, 'find')
     action = get_action(camera_id)
-    com.create_data_dir()
+    #com.create_data_dir()
 
     if action == action_types['read']:
         set_read_pamameters(camera_id)
@@ -926,11 +930,14 @@ def main(args):
 
     pipeline.add(streammux)
     for i in range(number_sources):
-        os.mkdir(folder_name+"/stream_"+str(i))
+        # parece no ser necesario
+        #os.mkdir(folder_name+"/stream_"+str(i))
         frame_count["stream_"+str(i)]=0
         saved_count["stream_"+str(i)]=0
-        print("Creating source_bin ",i," \n ")
-        uri_name=args[i+1]
+        print("Creating source_bin: {} with uri: {}\n".format(i, scfg_list[i]['source']))
+        uri_name = scfg_list[i]['source']
+        #uri_name=args[i+1]
+        print('uri_name', args[i+1])
         if uri_name.find("rtsp://") == 0 :
             is_live = True
         source_bin=create_source_bin(i, uri_name)
@@ -945,6 +952,7 @@ def main(args):
         if not srcpad:
             com.log_error("Unable to create src pad bin \n")
         srcpad.link(sinkpad)
+    quit()
     print("Creating Pgie \n ")
     pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
     if not pgie:
@@ -1117,6 +1125,9 @@ def main(args):
     for i, source in enumerate(args[:-1]):
         if (i != 0):
             print(i, ": ", source)
+    #for i, source in enumerate(args[:-1]):
+    #    if (i != 0):
+    #        print(i, ": ", source)
 
     print("Starting pipeline \n")
     # start play back and listed to events		
