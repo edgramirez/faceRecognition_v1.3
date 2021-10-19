@@ -78,12 +78,10 @@ def get_config_filtered_by_active_service(config_data):
     active_services = []
     for key in config_data.keys():
         com.log_debug("Checking if service '{}/{}' is active".format(key, config_data[key]['serviceType']))
-        print(key, config_data[key]['serviceType'], config_data[key]['enabled'])
         if config_data[key]['enabled']:
-            print('aqui..',key)
+            com.log_debug("Service '{}' enabled status: {}".format(config_data[key]['serviceType'], config_data[key]['enabled']))
             active_services.append(config_data[key])
 
-    print(active_services)
     if len(active_services) < 1:
         com.log_error("\nConfiguration does not contain any active service for this server: \n\n{}".format(config_data))
     return active_services
