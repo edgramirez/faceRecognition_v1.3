@@ -22,7 +22,7 @@ if sys.argv[1] == 'newBlackList':
     else:
         com.log_error(msg)
 
-    com.create_data_dir(com.RESULTS_DIRECTORY)
+    com.create_data_dir(com.RESULTS_DIR)
     com.log_debug("Saving data in directory: {}".format(blacklist_results_dir))
 
     import lib.biblioteca as biblio 
@@ -37,7 +37,7 @@ elif sys.argv[1] == 'newWhiteList':
     else:
         com.log_error(msg)
 
-    com.create_data_dir(com.RESULTS_DIRECTORY)
+    com.create_data_dir(com.RESULTS_DIR)
     com.log_debug("Saving data in directory: {}".format(whitelist_results_dir))
 
     import lib.biblioteca as biblio 
