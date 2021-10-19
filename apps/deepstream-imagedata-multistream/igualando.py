@@ -23,15 +23,14 @@
 ################################################################################
 
 import sys
-sys.path.append('../')
 import gi
 import configparser
+sys.path.append('../')
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
 from gi.repository import GLib
 from ctypes import *
 import time
-import sys
 import math
 import platform
 from common.is_aarch_64 import is_aarch64
@@ -874,15 +873,15 @@ def main(args):
     if path.exists(folder_name):
         if com.DELETE_PREVIOUS_TMP_RESULTS:
             com.log_debug('Automatically deleting the previous Tmp directory at: {}'.format(folder_name))
+            com.delete_tree(folder_name, '/tmp')
         else:
             com.log_debug("To automatically delete the Tmp folder, setup the environment variable like this: export DELETE_PREVIOUS_TMP_RESULTS=True")
             com.log_error("The output folder %s already exists. Please remove it first." % folder_name)
             sys.exit(1)
     else:
         os.mkdir(folder_name)
-        com.log_debug("Frames will be saved in ", folder_name)
+        com.log_debug("Frames will be saved in '{}'".format(folder_name))
         com.create_data_dir(folder_name)
-    quit()
 
     # Standard GStreamer initialization
     GObject.threads_init()
@@ -957,7 +956,7 @@ def main(args):
         if not srcpad:
             com.log_error("Unable to create src pad bin \n")
         srcpad.link(sinkpad)
-    quit()
+
     print("Creating Pgie \n ")
     pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
     if not pgie:
@@ -1127,9 +1126,8 @@ def main(args):
 
     # List the sources
     print("Now playing...")
-    for i, source in enumerate(args[:-1]):
-        if (i != 0):
-            print(i, ": ", source)
+    for dictionary in scfg_list:
+            com.log_debug("Now playing ... {}".format(dictionary['source']))
     #for i, source in enumerate(args[:-1]):
     #    if (i != 0):
     #        print(i, ": ", source)
