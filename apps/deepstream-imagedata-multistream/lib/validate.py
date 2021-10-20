@@ -1,5 +1,6 @@
 import lib.common as com
 
+SOURCE_PATTERNS = ('file:///', 'rtsp://')
 AVAILABLE_SERVICES = ('find', 'blackList', 'whiteList', 'recurrence', 'ageAndGender')
 SERVICE_DEFINITION = {
         "find": {
@@ -18,14 +19,24 @@ SERVICE_DEFINITION = {
     }
 
 
-def validate_source(data):
+def validate_sources(data):
     '''
     Validate the configuration source recovered from server contains correct values
     '''
-    data['source'] = ''
-    if item in data.keys() and str(type(data[item])).split("'")[1] != service_definition['optional'][item]:
-        com.log_error("      Configuration error - Parameter '{}' value must be type : {}, Current value: {}".format(item, service_definition['optional'][item], str(type(data[item])).split("'")[1]))
-    com.log_debug("Source is OK")
+    for dictionary in data:
+        pattern_not_found = True
+        i = 0
+        for pattern in SOURCE_PATTERNS:
+            if dictionary['source'][0:len(pattern)] == pattern:
+                if i == 0 and com.file_exists(dictionary['source']):
+                    com.log_error("Configuration error - Source file: {}, does not exist: {}".format(dictionary['source']))
+                pattern_not_found = False
+                break
+            i += 1
+        if pattern_not_found:
+            com.log_error("Configuration error - Source value must start with any of this patterns: {}, Current value: {}".format(SOURCE_PATTERNS, dictionary['source']))
+
+    com.log_debug('All source values are correct')
     return True
 
 
@@ -115,6 +126,8 @@ def parse_parameters_and_values_from_config(config_data):
     # Check all obligatory and optional parameters and values types provided by the dashboard config
     check_service_against_definition(scfg)
 
+    # Check all source values to ensure they are correct and in the case of files they actually exists
+    validate_sources(scfg)
     return scfg
 
     if 'reference_line_coordinates' in data.keys():
