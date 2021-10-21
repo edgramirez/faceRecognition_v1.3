@@ -49,10 +49,11 @@ SERVICE_DEFINITION = {
                 'faceDbFile':   'str'
                 },
             'optional': {
-                'ignorePreviousDb': 'bool',
+                'checkBlackList':   'bool',
+                'checkWhieteList':  'bool',
                 }
         },
-        "gender": {
+        "ageAndGender": {
             'obligaroty': {
                 'enabled':      'bool',
                 'source':       'str',
@@ -83,14 +84,12 @@ def validate_sources(data):
     '''
     for dictionary in data:
         pattern_not_found = True
-        i = 0
         for pattern in SOURCE_PATTERNS:
             if dictionary['source'][0:len(pattern)] == pattern:
-                if i == 0 and com.file_exists(dictionary['source']):
-                    com.log_error("Configuration error - Source file: {}, does not exist: {}".format(dictionary['source']))
+                if dictionary['source'][:7] == 'file://' and com.file_exists(dictionary['source'][7:]) is False:
+                    com.log_error("Configuration error - Source file: {}, does not exist".format(dictionary['source'][7:]))
                 pattern_not_found = False
                 break
-            i += 1
         if pattern_not_found:
             com.log_error("Configuration error - Source value must start with any of this patterns: {}, Current value: {}".format(SOURCE_PATTERNS, dictionary['source']))
 
