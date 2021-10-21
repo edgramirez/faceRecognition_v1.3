@@ -4,7 +4,7 @@
             "serviceType": "find",
             "source": "file:///tmp/amlo.mp4",
             "enabled": true,
-            "faceDbFile": "/home/edgar/faceRecognition/",
+            "faceDbFile": "found_service1.dat",
             "checkBlackList": true,
             "checkWhieteList": true,
             "ignorePreviousDb": true,
@@ -14,7 +14,7 @@
             "serviceType": "find",
             "source": "file:///tmp/amlo.mp4",
             "enabled": true,
-            "faceDbFile": "/home/edgar/faceRecognition/",
+            "faceDbFile": "found_service2.dat",
             "checkBlackList": true,
             "checkWhieteList": true,
             "ignorePreviousDb": true,
@@ -26,27 +26,25 @@
             "serviceType": "find",
             "source": "file:///tmp/amlo.mp4",
             "enabled": false,
-            "faceDbFile": "/home/edgar/faceRecognition/",
+            "faceDbFile": "found_service1.dat",
             "checkBlackList": true,
             "checkWhieteList": true,
             "ignorePreviousDb": true,
             "saveFacesDb": true
             },
         "service2": {
-            "serviceType": "find",
-            "source": "file:///tmp/amlo.mp4",
-            "enabled": false,
-            "faceDbFile": "/home/edgar/faceRecognition/",
-            "checkBlackList": true,
-            "checkWhieteList": true,
-            "ignorePreviousDb": true,
-            "saveFacesDb": true
-            },
-        "service3": {
-            "serviceType": "find",
+            "serviceType": "recurrence",
             "source": "file:///tmp/amlo.mp4",
             "enabled": true,
-            "faceDbFile": "/home/edgar/faceRecognition/"
+            "faceDbFile": "recurrence_service2.dat",
+            "checkBlackList": true,
+            "checkWhieteList": true
+            },
+        "service3": {
+            "serviceType": "ageAndGender",
+            "source": "file:///tmp/amlo.mp4",
+            "enabled": false,
+            "faceDbFile": "age_and_gender_service3.dat"
             }
         }
 }
