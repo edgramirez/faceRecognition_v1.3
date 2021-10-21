@@ -46,11 +46,7 @@ def delete_tree(path_str, match_pattern = None):
             shutil.rmtree(match_pattern)
             return True
         except OSError as e:
-            print("Error: {} - {}. (Unable to delete path '{}')".format(e.filename, e.strerror, path_str))
-            import subprocess
-            cmd = "rm -rf " + match_pattern
-            print(cmd)
-            #os.system(cmd)
+            log_error("Error: {} - {}. (Unable to delete path '{}')".format(e.filename, e.strerror, path_str))
     else:
         log_debug("Directory path '{}' does not exist, nothing to do".format(path_str))
 
