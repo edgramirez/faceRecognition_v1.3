@@ -13,6 +13,76 @@ global source_type
 source_type = {'IMAGE': 'image', 'RTSP': 'rtsp', 'VIDEO': 'video'}
 IMAGE_GROUPS = ('blacklist', 'whitelist')
 
+SOURCE_PATTERNS = ('file:///', 'rtsp://')
+AVAILABLE_SERVICES = ('find', 'blackList', 'whiteList', 'recurrence', 'ageAndGender')
+SERVICE_DEFINITION = {
+        "find": {
+            'obligaroty': {
+                'enabled':      'bool',
+                'source':       'str',
+                'cameraId':     'str',
+                'faceDbFile':   'str'
+                },
+            'optional': {
+                'checkBlackList':   'bool',
+                'checkWhieteList':  'bool',
+                'ignorePreviousDb': 'bool',
+                'saveFacesDb':      'bool'
+                }
+        },
+        "blackList": {
+            'obligaroty': {
+                'enabled':      'bool',
+                'source':       'str',
+                'cameraId':     'str',
+                'faceDbFile':   'str'
+                },
+            'optional': {
+                'checkWhieteList':  'bool',
+                'ignorePreviousDb': 'bool',
+                'saveFacesDb':      'bool'
+                }
+        },
+        "whiteList": {
+            'obligaroty': {
+                'enabled':      'bool',
+                'source':       'str',
+                'cameraId':     'str',
+                'faceDbFile':   'str'
+                },
+            'optional': {
+                'checkBlackList':   'bool',
+                'ignorePreviousDb': 'bool',
+                'saveFacesDb':      'bool'
+                }
+        },
+        "recurrence": {
+            'obligaroty': {
+                'enabled':      'bool',
+                'source':       'str',
+                'cameraId':     'str',
+                'faceDbFile':   'str'
+                },
+            'optional': {
+                'checkBlackList':   'bool',
+                'checkWhieteList':  'bool',
+                }
+        },
+        "ageAndGender": {
+            'obligaroty': {
+                'enabled':      'bool',
+                'source':       'str',
+                'cameraId':     'str',
+                'faceDbFile':   'str'
+                },
+            'optional': {
+                'ignorePreviousDb': 'bool',
+                'saveFacesDb':      'bool'
+                }
+        }
+    }
+
+
 # home directory + directory to get data and store results 
 #DATA_AND_RESULTS = '/face_recognition_data_and_results'
 #SERVER_URI = 'https://mit.kairosconnect.app/'
