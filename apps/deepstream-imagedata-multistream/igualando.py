@@ -846,14 +846,12 @@ def create_source_bin(index,uri):
     return nbin
 
 def main(args):
-    scfg_list, server_id  = biblio.get_server_info()
+    scfg = biblio.get_server_info()
 
-    print(scfg_list, server_id)
-    quit()
-    for i in range(len(scfg_list)):
+    number_sources = len(scfg)
+    for i in range(number_sources):
         fps_streams["stream{0}".format(i)] = GETFPS(i)
 
-    number_sources = len(scfg_list)
     com.log_debug("Numero de fuentes :{}".format(number_sources))
     com.log_debug("\n------ Fps_streams: ".format(fps_streams))
 
@@ -876,8 +874,9 @@ def main(args):
     GObject.threads_init()
     Gst.init(None)
 
-    for service_dict in scfg_list:
-        camera_service_id = server_id + '_' + service_dict['serviceType'] + '_' + service_dict['cameraId']
+    for camera_service_id  in scfg:
+        print(camera_service_id, scfg[camera_service_id])
+        quit()
         set_action(camera_service_id, service_dict['serviceType'])
     if action == action_types['read']:
         set_read_pamameters(camera_service_id)
@@ -1100,7 +1099,7 @@ def main(args):
 
     # List the sources
     print("Now playing...")
-    for dictionary in scfg_list:
+    for dictionary in scfg:
             com.log_debug("Now playing ... {}".format(dictionary['source']))
     #for i, source in enumerate(args[:-1]):
     #    if (i != 0):
