@@ -79,9 +79,7 @@ def get_server_info(abort_if_exception = True, quit_program = True):
     if scfg is False:
         scfg = get_server_info_from_file('configs/Server_Emulatation_configs_from_Excel.py', abort_if_exception)
     # check the return information is actually for this machine by comparing the ID and validate all the parameters
-    scfg_list = validate.parse_parameters_and_values_from_config(scfg)
-
-    return scfg_list
+    return validate.parse_parameters_and_values_from_config(scfg)
 
 
 def send_json(payload, action, url = None, **options):
