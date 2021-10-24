@@ -14,7 +14,6 @@ source_type = {'IMAGE': 'image', 'RTSP': 'rtsp', 'VIDEO': 'video'}
 IMAGE_GROUPS = ('blacklist', 'whitelist')
 
 SOURCE_PATTERNS = ('file:///', 'rtsp://')
-AVAILABLE_SERVICES = ('find', 'blackList', 'whiteList', 'recurrence', 'ageAndGender')
 SERVICE_DEFINITION = {
         "find": {
             'obligaroty': {
@@ -86,9 +85,9 @@ SERVICE_DEFINITION = {
 # home directory + directory to get data and store results 
 #DATA_AND_RESULTS = '/face_recognition_data_and_results'
 #SERVER_URI = 'https://mit.kairosconnect.app/'
-RESULTS_DIR                 = os.environ['RESULTS_DIRECTORY']
-INPUT_DB_DIRECTORY          = os.environ['INPUT_DB_DIRECTORY']
-TMP_RESULTS_DIR             = os.environ['TMP_RESULTS_DIR']
+RESULTS_DIRECTORY   = os.environ['RESULTS_DIRECTORY']
+INPUT_DB_DIRECTORY  = os.environ['INPUT_DB_DIRECTORY']
+TMP_RESULTS_DIR     = os.environ['TMP_RESULTS_DIR']
 try:
     DELETE_PREVIOUS_TMP_RESULTS = os.environ['DELETE_PREVIOUS_TMP_RESULTS']
 except KeyError:
