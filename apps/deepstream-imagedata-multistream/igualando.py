@@ -140,9 +140,9 @@ def get_group_type(camera_service_id):
         com.log_error('Action  {}'.format(db_name))
 
 
-def set_read_pamameters(camera_service_id):
+def initialize_read_pamameters(camera_service_id):
     encodings, metadata = [], []
-    output_db_name = com.RESULTS_DIR + '/test_video_default.data'
+    output_db_name = com.RESULTS_DIRECTORY + '/test_video_default.data'
 
     if com.file_exists_and_not_empty(output_db_name):
         encodings, metadata = biblio.read_pickle(output_db_name)
@@ -153,7 +153,7 @@ def set_read_pamameters(camera_service_id):
 
 def set_find_parameters(camera_service_id, group_type):
     encodings, metadata = [], []
-    output_db_name = com.RESULTS_DIR + '/found_faces_db.dat'
+    output_db_name = com.RESULTS_DIRECTORY + '/found_faces_db.dat'
 
     if group_type == com.IMAGE_GROUPS[0]:
         db_name = com.INPUT_DB_DIRECTORY + '/blacklist_db/BlackList.dat'
@@ -175,12 +175,27 @@ def set_face_detection_url(camera_service_id):
 
 
 def set_action(camera_service_id, value):
-    if value in com.AVAILABLE_SERVICES:
-        global action
+    global action
+    service_list = [item for item in com.SERVICE_DEFINITION.keys()]
+
+    if value in service_list:
         action.update({camera_service_id: value})
+
+        if action[camera_service_id] == service_list[0]:
+            com.log_debug('set find variables for service id: {}'.format(camera_service_id))
+        elif action[camera_service_id] == service_list[1]:
+            com.log_debug('set "blackList" variables for service id: {}'.format(camera_service_id))
+        elif action[camera_service_id] == service_list[2]:
+            com.log_debug('set "whiteList" variables for service id: {}'.format(camera_service_id))
+        elif action[camera_service_id] == service_list[3]:
+            com.log_debug('set "recurrence" variables for service id: {}'.format(camera_service_id))
+            initialize_read_pamameters(camera_service_id)
+        elif action[camera_service_id] == service_list[4]:
+            com.log_debug('set "whiteList" variables for service id: {}'.format(camera_service_id))
+
         return True
 
-    com.log_error('Unable to set up value:{}, must be one of this: {}'.format(value, com.AVAILABLE_SERVICES))
+    com.log_error('Unable to set up value:{}, must be one of this: {}'.format(value, service_list))
 
 
 def set_known_faces_db_name(camera_service_id, value):
@@ -853,7 +868,7 @@ def main(args):
         fps_streams["stream{0}".format(i)] = GETFPS(i)
 
     com.log_debug("Numero de fuentes :{}".format(number_sources))
-    com.log_debug("\n------ Fps_streams: ".format(fps_streams))
+    print("\n------ Fps_streams: ------n", fps_streams)
 
     global folder_name
     folder_name = com.TMP_RESULTS_DIR
@@ -875,11 +890,11 @@ def main(args):
     Gst.init(None)
 
     for camera_service_id  in scfg:
-        print(camera_service_id, scfg[camera_service_id])
-        quit()
-        set_action(camera_service_id, service_dict['serviceType'])
+        set_action(camera_service_id, scfg[camera_service_id]['serviceType'])
+    print('edgar')
+    quit()
     if action == action_types['read']:
-        set_read_pamameters(camera_service_id)
+        initialize_read_pamameters(camera_service_id)
     elif action == action_types['find']:
         group_type = 'whitelist'
         group_type = 'blacklist' # TEST VALUE
