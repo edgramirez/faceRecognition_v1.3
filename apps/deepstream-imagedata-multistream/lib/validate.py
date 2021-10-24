@@ -69,9 +69,10 @@ def check_service_against_definition(data):
 
 
 def validate_service_exits(data):
+    service_list = com.SERVICE_DEFINITION.keys()
     for camera_service_id in data.keys():
-        if data[camera_service_id]['serviceType'] not in com.AVAILABLE_SERVICES:
-            com.log_error("Configuration error - Requested service: {} - Available services: {}".format(service_parameter, com.AVAILABLE_SERVICES))
+        if data[camera_service_id]['serviceType'] not in service_list:
+            com.log_error("Configuration error - Requested service: {} - Available services: {}".format(service_parameter, service_list))
     return True
 
 
