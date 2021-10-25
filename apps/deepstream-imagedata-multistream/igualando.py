@@ -140,18 +140,40 @@ def get_group_type(camera_service_id):
         com.log_error('Action  {}'.format(db_name))
 
 
-def initialize_read_pamameters(camera_service_id):
+def set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name):
     encodings, metadata = [], []
-    output_db_name = com.RESULTS_DIRECTORY + '/test_video_default.data'
-
-    if com.file_exists_and_not_empty(output_db_name):
-        encodings, metadata = biblio.read_pickle(output_db_name)
+    if com.file_exists_and_not_empty(input_output_db_name):
+        encodings, metadata = biblio.read_pickle(input_output_db_name)
 
     set_known_faces_db(camera_service_id, encodings, metadata)
-    set_output_db_name(camera_service_id, output_db_name)
+    set_output_db_name(camera_service_id, input_output_db_name)
 
 
-def set_find_parameters(camera_service_id, group_type):
+def set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
+    seach_db_name = com.BLACKLIST_DB + '/blackList_' + camera_service_id + '_db.dat'
+    if com.file_exists_and_not_empty(seach_db_name):
+        set_output_db_name(camera_service_id, input_output_db_name)
+        set_known_faces_db_name(camera_service_id, db_name)
+        encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_service_id), False)
+        set_known_faces_db(camera_service_id, encodings, metadata)
+        return True
+
+    com.log_error('Unable to setup blacklist input/output service variables - blacklist seach db "{}" does not exists'.format(seach_db_name))
+
+
+def set_whitelist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
+    seach_db_name = com.WHITELIST_DB + '/whiteList_' + camera_service_id + '_db.dat'
+    if com.file_exists_and_not_empty(seach_db_name):
+        set_output_db_name(camera_service_id, input_output_db_name)
+        set_known_faces_db_name(camera_service_id, db_name)
+        encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_service_id), False)
+        set_known_faces_db(camera_service_id, encodings, metadata)
+        return True
+
+    com.log_error('Unable to setup whitelist input/output service variables - whitelist seach db "{}" does not exists'.format(seach_db_name))
+
+
+def set_service_outputs_and_variables(camera_service_id, group_type):
     encodings, metadata = [], []
     output_db_name = com.RESULTS_DIRECTORY + '/found_faces_db.dat'
 
@@ -174,22 +196,32 @@ def set_face_detection_url(camera_service_id):
     face_detection_url.update({camera_service_id: com.SERVER_URI + 'tx/face-detection.endpoint'})
 
 
-def set_action(camera_service_id, value):
+def set_action(camera_service_id, service_name):
     global action
     service_list = [item for item in com.SERVICE_DEFINITION.keys()]
 
-    if value in service_list:
-        action.update({camera_service_id: value})
+    if service_name in service_list:
+        input_output_db_name = com.RESULTS_DIRECTORY + '/general_found_faces_db' + camera_service_id + '_.dat'
+        action.update({camera_service_id: service_name})
 
         if action[camera_service_id] == service_list[0]:
             com.log_debug('set find variables for service id: {}'.format(camera_service_id))
         elif action[camera_service_id] == service_list[1]:
             com.log_debug('set "blackList" variables for service id: {}'.format(camera_service_id))
+            #group_type = 'blacklist'
+            #set_group_type(camera_service_id, group_type)
+            #if group_type not in com.IMAGE_GROUPS:
+            #    com.log_error('Action  {}'.format(db_name))
+            set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
+            #set_service_outputs_and_variables(camera_service_id, get_group_type(camera_service_id))
         elif action[camera_service_id] == service_list[2]:
             com.log_debug('set "whiteList" variables for service id: {}'.format(camera_service_id))
+            set_whitelist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
         elif action[camera_service_id] == service_list[3]:
             com.log_debug('set "recurrence" variables for service id: {}'.format(camera_service_id))
-            initialize_read_pamameters(camera_service_id)
+            set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name)
+            print('iedgar')
+            quit()
         elif action[camera_service_id] == service_list[4]:
             com.log_debug('set "whiteList" variables for service id: {}'.format(camera_service_id))
 
@@ -863,13 +895,6 @@ def create_source_bin(index,uri):
 def main(args):
     scfg = biblio.get_server_info()
 
-    number_sources = len(scfg)
-    for i in range(number_sources):
-        fps_streams["stream{0}".format(i)] = GETFPS(i)
-
-    com.log_debug("Numero de fuentes :{}".format(number_sources))
-    print("\n------ Fps_streams: ------n", fps_streams)
-
     global folder_name
     folder_name = com.TMP_RESULTS_DIR
     if path.exists(folder_name):
@@ -885,6 +910,12 @@ def main(args):
         com.log_debug("Frames will be saved in '{}'".format(folder_name))
         com.create_data_dir(folder_name)
 
+    number_sources = len(scfg)
+    for i in range(number_sources):
+        fps_streams["stream{0}".format(i)] = GETFPS(i)
+    com.log_debug("Numero de fuentes :{}".format(number_sources))
+    print("\n------ Fps_streams: ------n", fps_streams)
+
     # Standard GStreamer initialization
     GObject.threads_init()
     Gst.init(None)
@@ -893,8 +924,9 @@ def main(args):
         set_action(camera_service_id, scfg[camera_service_id]['serviceType'])
     print('edgar')
     quit()
+    '''
     if action == action_types['read']:
-        initialize_read_pamameters(camera_service_id)
+        initialize_read_parameters(camera_service_id)
     elif action == action_types['find']:
         group_type = 'whitelist'
         group_type = 'blacklist' # TEST VALUE
@@ -903,7 +935,8 @@ def main(args):
         if group_type not in com.IMAGE_GROUPS:
             com.log_error('Action  {}'.format(db_name))
 
-        set_find_parameters(camera_service_id, get_group_type(camera_service_id))
+        set_service_outputs_and_variables(camera_service_id, get_group_type(camera_service_id))
+    '''
 
     # Create gstreamer elements */
     # Create Pipeline element that will form a connection of other elements
@@ -945,7 +978,7 @@ def main(args):
             com.log_error("Unable to create src pad bin \n")
         srcpad.link(sinkpad)
 
-    print("Creating Pgie \n ")
+    com.log_debug("Creating Pgie \n ")
     pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
     if not pgie:
         com.log_error(" Unable to create pgie \n")
@@ -1012,7 +1045,6 @@ def main(args):
     if(pgie_batch_size != number_sources):
         print("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources," \n")
         pgie.set_property("batch-size",number_sources)
-
 
     # Set properties of tracker
     # April 21th
