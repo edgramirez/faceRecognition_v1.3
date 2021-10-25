@@ -350,8 +350,8 @@ def new_face_metadata(face_image, name = None, camera_id = None, confidence = No
     """
     Add a new person to our list of known faces
     """
-    if image_group and not image_group in com.IMAGE_GROUPS:
-        com.log_error("Image type most be one of the followings or None: {}".format(com.IMAGE_GROUPS))
+    #if image_group and not image_group in com.IMAGE_GROUPS:
+    #    com.log_error("Image type most be one of the followings or None: {}".format(com.IMAGE_GROUPS))
 
     if name is None:
         name = camera_id + '_' + str(com.get_timestamp())
