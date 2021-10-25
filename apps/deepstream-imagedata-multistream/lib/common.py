@@ -10,8 +10,8 @@ from os import walk
 
 
 global source_type
-source_type = {'IMAGE': 'image', 'RTSP': 'rtsp', 'VIDEO': 'video'}
-IMAGE_GROUPS = ('blacklist', 'whitelist')
+#source_type = {'IMAGE': 'image', 'RTSP': 'rtsp', 'VIDEO': 'video'}
+#IMAGE_GROUPS = ('blacklist', 'whitelist')
 
 SOURCE_PATTERNS = ('file:///', 'rtsp://')
 SERVICE_DEFINITION = {
@@ -88,11 +88,14 @@ SERVICE_DEFINITION = {
 RESULTS_DIRECTORY   = os.environ['RESULTS_DIRECTORY']
 INPUT_DB_DIRECTORY  = os.environ['INPUT_DB_DIRECTORY']
 TMP_RESULTS_DIR     = os.environ['TMP_RESULTS_DIR']
+BLACKLIST_DB        = INPUT_DB_DIRECTORY + '/blacklist_db'
+WHITELIST_DB        = INPUT_DB_DIRECTORY + '/whitelist_db'
 try:
     DELETE_PREVIOUS_TMP_RESULTS = os.environ['DELETE_PREVIOUS_TMP_RESULTS']
 except KeyError:
     print('\nSetting up "DELETE_PREVIOUS_TMP_RESULTS" variable to "False" by default')
     DELETE_PREVIOUS_TMP_RESULTS = False
+
 
 
 def dir_exists(path_str):
