@@ -140,7 +140,7 @@ def get_group_type(camera_id):
         com.log_error('Action  {}'.format(db_name))
 
 
-def set_read_pamameters(camera_id):
+def set_recurrence_outputs_and_inputs(camera_id):
     encodings, metadata = [], []
     output_db_name = com.HOMEDIR + '/test_video_default.data'
 
@@ -151,7 +151,7 @@ def set_read_pamameters(camera_id):
     set_output_db_name(camera_id, output_db_name)
 
 
-def set_find_parameters(camera_id, group_type):
+def set_service_outputs_and_variables(camera_id, group_type):
     encodings, metadata = [], []
     output_db_name = com.HOMEDIR + '/found_faces_db.dat'
 
@@ -894,7 +894,7 @@ def main(args):
     com.create_data_dir()
 
     if action == action_types['read']:
-        set_read_pamameters(camera_id)
+        set_recurrence_outputs_and_inputs(camera_id)
     elif action == action_types['find']:
         group_type = 'whitelist'
         group_type = 'blacklist' # TEST VALUE
@@ -903,7 +903,7 @@ def main(args):
         if group_type not in com.IMAGE_GROUPS:
             com.log_error('Action  {}'.format(db_name))
 
-        set_find_parameters(camera_id, get_group_type(camera_id))
+        set_service_outputs_and_variables(camera_id, get_group_type(camera_id))
 
     # Create gstreamer elements */
     # Create Pipeline element that will form a connection of other elements

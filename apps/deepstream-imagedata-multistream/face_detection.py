@@ -124,7 +124,7 @@ genderNet = cv2.dnn.readNet(genderModel, genderProto)
 ### setters ###
 
 
-def set_read_pamameters(camera_id):
+def set_recurrence_outputs_and_inputs(camera_id):
     encodings, metadata = [], []
     output_db_name = com.HOMEDIR + '/test_video_default.data'
 
@@ -135,7 +135,7 @@ def set_read_pamameters(camera_id):
     set_output_db_name(camera_id, output_db_name)
 
 
-def set_find_parameters(camera_id):
+def set_service_outputs_and_variables(camera_id):
     encodings, metadata = [], []
     output_db_name = com.HOMEDIR + '/found_faces_db.dat'
     known_faces_db_name = com.HOMEDIR + '/BlackList.dat'
@@ -856,9 +856,9 @@ def main(args):
     com.create_data_dir()
 
     if action == action_types['read']:
-        set_read_pamameters(camera_id)
+        set_recurrence_outputs_and_inputs(camera_id)
     elif action == action_types['find']:
-        set_find_parameters(camera_id)
+        set_service_outputs_and_variables(camera_id)
 
     # Create gstreamer elements */
     # Create Pipeline element that will form a connection of other elements
