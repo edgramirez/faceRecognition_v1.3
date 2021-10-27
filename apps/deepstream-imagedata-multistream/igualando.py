@@ -49,9 +49,12 @@ import face_recognition
 from datetime import datetime, timedelta
 
 
-fps_streams={}
-frame_count={}
-saved_count={}
+fps_streams = {}
+frame_count = {}
+saved_count = {}
+global scfg
+scfg = {}
+call_order_of_keys = []
 global PGIE_CLASS_ID_FACE
 PGIE_CLASS_ID_FACE=0
 global PGIE_CLASS_ID_MAKE
@@ -80,7 +83,6 @@ CURRENT_DIR = os.getcwd()
 global known_face_encodings
 global known_face_metadata
 global action
-global action_types
 global known_faces_indexes
 global not_applicable_id
 global video_initial_time
@@ -103,7 +105,6 @@ found_faces = []
 tracking_absence_dict = {}
 output_file = {}
 input_file = {}
-action_types = {'read': 1, 'find': 2, 'compare': 3}
 action = {}
 fake_frame_number = 0
 
@@ -126,18 +127,12 @@ genderNet = cv2.dnn.readNet(genderModel, genderProto)
 ### setters ###
 
 
-def set_group_type(camera_service_id, group_type):
-    global image_group_type
-    image_group_type.update({camera_service_id: group_type})
-
-
 def get_group_type(camera_service_id):
-    global image_group_type
-
-    if camera_service_id in image_group_type:
-        return image_group_type[camera_service_id]
-    else:
-        com.log_error('Action  {}'.format(db_name))
+    global scfg
+    try:
+        return scfg[camera_service_id]['serviceType']
+    except Exception as e:
+        com.log_error('get_group_type() - original exception: {}'.format(str(e)))
 
 
 def set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name):
@@ -147,13 +142,14 @@ def set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name):
 
     set_known_faces_db(camera_service_id, encodings, metadata)
     set_output_db_name(camera_service_id, input_output_db_name)
+    return True
 
 
 def set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
     seach_db_name = com.BLACKLIST_DB + '/blackList_' + camera_service_id + '_db.dat'
     if com.file_exists_and_not_empty(seach_db_name):
         set_output_db_name(camera_service_id, input_output_db_name)
-        set_known_faces_db_name(camera_service_id, db_name)
+        set_known_faces_db_name(camera_service_id, seach_db_name)
         encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_service_id), False)
         set_known_faces_db(camera_service_id, encodings, metadata)
         return True
@@ -208,20 +204,13 @@ def set_action(camera_service_id, service_name):
             com.log_debug('set find variables for service id: {}'.format(camera_service_id))
         elif action[camera_service_id] == service_list[1]:
             com.log_debug('set "blackList" variables for service id: {}'.format(camera_service_id))
-            #group_type = 'blacklist'
-            #set_group_type(camera_service_id, group_type)
-            #if group_type not in com.IMAGE_GROUPS:
-            #    com.log_error('Action  {}'.format(db_name))
             set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
-            #set_service_outputs_and_variables(camera_service_id, get_group_type(camera_service_id))
         elif action[camera_service_id] == service_list[2]:
             com.log_debug('set "whiteList" variables for service id: {}'.format(camera_service_id))
             set_whitelist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
         elif action[camera_service_id] == service_list[3]:
             com.log_debug('set "recurrence" variables for service id: {}'.format(camera_service_id))
             set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name)
-            print('iedgar')
-            quit()
         elif action[camera_service_id] == service_list[4]:
             com.log_debug('set "whiteList" variables for service id: {}'.format(camera_service_id))
 
@@ -237,7 +226,6 @@ def set_known_faces_db_name(camera_service_id, value):
 
 def set_output_db_name(camera_service_id, value):
     global output_file
-
     output_file.update({camera_service_id: value})
 
 
@@ -292,7 +280,7 @@ def get_face_detection_url(camera_service_id):
     if camera_service_id in face_detection_url:
         return face_detection_url[camera_service_id]
 
-    com.log_error('get_action() - No value found for camera_service_id: {}'.format(camera_service_id))
+    com.log_error('get_face_detection_url() - No value found for camera_service_id: {}'.format(camera_service_id))
 
 def get_action(camera_service_id):
     global action
@@ -354,7 +342,7 @@ def get_found_faces(camera_service_id):
 
 
 def get_camera_service_id(camera_service_id):
-    return 'FA:KE:MA:C:AD:DR:ES:S9'
+    return call_order_of_keys[camera_service_id]
 
 
 def get_delta(camera_service_id):
@@ -474,7 +462,7 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
     update = False
     best_index = None
 
-    if program_action == action_types['read']:
+    if program_action == com.SERVICE_DEFINITION['recurrence']:
         difference = None
 
         # We assume the delta time is always going to be so big that the id will change even with the same subject
@@ -539,7 +527,7 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
             current_group_type = get_group_type(camera_service_id)
             if best_index is None:
                 update_not_applicable_id(camera_service_id, obj_id)
-                if current_group_type == 'whitelist':
+                if current_group_type == 'whiteList':
                     print('Rostro con id: {}, no esta en la White list. Reportando incidente......'.format(obj_id))
                     cv2.imwrite('/tmp/found_elements/notInWhiteList_' + str(obj_id) + ".jpg", image)
                 else:
@@ -548,7 +536,7 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
 
                 return False
 
-            if current_group_type == 'blacklist':
+            if current_group_type == 'blackList':
                 print('Rostro con id: {} coincide con elemento {} en la Black list'.format(obj_id, metadata['name']))
                 cv2.imwrite('/tmp/found_elements/BlackListMatch_' + str(obj_id) + ".jpg", image)
             else:
@@ -691,7 +679,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
     delta = get_delta(camera_service_id)
     default_similarity = get_similarity(camera_service_id)
 
-    if program_action == action_types['find']:
+    if program_action == com.SERVICE_DEFINITION['find']:
         # TODO
         #
         # json talk to the dashboard to check current data 
@@ -770,8 +758,8 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
 
         #print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Face_count=",obj_counter[PGIE_CLASS_ID_FACE],"Person_count=",obj_counter[PGIE_CLASS_ID_PERSON])
         # Get frame rate through this probe
-        fps_streams["stream{0}".format(frame_meta.pad_index)].get_fps()
-        saved_count["stream_"+str(frame_meta.pad_index)] += 1        
+        fps_streams[camera_service_id].get_fps()
+        saved_count["stream_"+str(call_order_of_keys[frame_meta.pad_index])] += 1
 
         try:
             l_frame=l_frame.next
@@ -787,7 +775,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
                     tracking_absence_dict[item] += 1
 
     if save_image:
-        if program_action == action_types['read']:
+        if program_action == com.SERVICE_DEFINITION['recurrence']:
             write_to_db(known_face_metadata, known_face_encodings, get_output_db_name(camera_service_id))
         else:
             target_metadata = get_found_faces(camera_service_id)
@@ -856,25 +844,26 @@ def decodebin_child_added(child_proxy,Object,name,user_data):
         print("Seting bufapi_version\n")
         Object.set_property("bufapi-version",True)
 
-def create_source_bin(index,uri):
+def create_source_bin(index, uri):
     print("Creating source bin")
 
     # Create a source GstBin to abstract this bin's content from the rest of the
     # pipeline
-    bin_name="source-bin-%02d" %index
-    print(bin_name)
+    bin_name = "source-bin-%s" %index
+    #bin_name = "source-bin-%02d" %index
+    com.log_debug(bin_name)
     nbin=Gst.Bin.new(bin_name)
     if not nbin:
-        com.log_error(" Unable to create source bin \n")
+        com.log_error(" Unable to create source bin")
 
     # Source element for reading from the uri.
     # We will use decodebin and let it figure out the container format of the
     # stream and the codec and plug the appropriate demux and decode plugins.
-    uri_decode_bin=Gst.ElementFactory.make("uridecodebin", "uri-decode-bin")
+    uri_decode_bin = Gst.ElementFactory.make("uridecodebin", "uri-decode-bin")
     if not uri_decode_bin:
-        com.log_error(" Unable to create uri decode bin \n")
+        com.log_error(" Unable to create uri decode bin")
     # We set the input uri to the source element
-    uri_decode_bin.set_property("uri",uri)
+    uri_decode_bin.set_property("uri", uri)
     # Connect to the "pad-added" signal of the decodebin which generates a
     # callback once a new pad for raw data has beed created by the decodebin
     uri_decode_bin.connect("pad-added",cb_newpad,nbin)
@@ -885,14 +874,15 @@ def create_source_bin(index,uri):
     # now. Once the decode bin creates the video decoder and generates the
     # cb_newpad callback, we will set the ghost pad target to the video decoder
     # src pad.
-    Gst.Bin.add(nbin,uri_decode_bin)
+    Gst.Bin.add(nbin, uri_decode_bin)
     bin_pad=nbin.add_pad(Gst.GhostPad.new_no_target("src",Gst.PadDirection.SRC))
     if not bin_pad:
-        com.log_error(" Failed to add ghost pad in source bin \n")
+        com.log_error(" Failed to add ghost pad in source bin")
         return None
     return nbin
 
 def main(args):
+    global scfg
     scfg = biblio.get_server_info()
 
     global folder_name
@@ -911,8 +901,14 @@ def main(args):
         com.create_data_dir(folder_name)
 
     number_sources = len(scfg)
-    for i in range(number_sources):
-        fps_streams["stream{0}".format(i)] = GETFPS(i)
+    is_live = False
+    com.log_debug(scfg)
+    for camera_service_id  in scfg:
+        call_order_of_keys.append(camera_service_id)
+        set_action(camera_service_id, scfg[camera_service_id]['serviceType'])
+        fps_streams[camera_service_id] = GETFPS(camera_service_id)
+        if is_live is False and scfg[camera_service_id]['source'].find("rtsp://") == 0:
+            is_live = True
     com.log_debug("Numero de fuentes :{}".format(number_sources))
     print("\n------ Fps_streams: ------n", fps_streams)
 
@@ -920,117 +916,97 @@ def main(args):
     GObject.threads_init()
     Gst.init(None)
 
-    for camera_service_id  in scfg:
-        set_action(camera_service_id, scfg[camera_service_id]['serviceType'])
-    print('edgar')
-    quit()
-    '''
-    if action == action_types['read']:
-        initialize_read_parameters(camera_service_id)
-    elif action == action_types['find']:
-        group_type = 'whitelist'
-        group_type = 'blacklist' # TEST VALUE
-        set_group_type(camera_service_id, group_type)
-
-        if group_type not in com.IMAGE_GROUPS:
-            com.log_error('Action  {}'.format(db_name))
-
-        set_service_outputs_and_variables(camera_service_id, get_group_type(camera_service_id))
-    '''
-
     # Create gstreamer elements */
     # Create Pipeline element that will form a connection of other elements
-    print("Creating Pipeline \n ")
+    com.log_debug("Creating Pipeline")
     pipeline = Gst.Pipeline()
-    is_live = False
 
     if not pipeline:
-        com.log_error(" Unable to create Pipeline \n")
-    print("Creating streamux \n ")
+        com.log_error(" Unable to create Pipeline")
+    com.log_debug("Creating streamux")
 
     # Create nvstreammux instance to form batches from one or more sources.
     streammux = Gst.ElementFactory.make("nvstreammux", "Stream-muxer")
     if not streammux:
-        com.log_error(" Unable to create NvStreamMux \n")
+        com.log_error(" Unable to create NvStreamMux")
 
     pipeline.add(streammux)
-    for i in range(number_sources):
-        # parece no ser necesario
-        #os.mkdir(folder_name+"/stream_"+str(i))
-        frame_count["stream_"+str(i)]=0
-        saved_count["stream_"+str(i)]=0
-        uri_name = scfg_list[i]['source']
-        #uri_name=args[i+1]
-        #print('uri_name', uri_name)
-        print("Creating source_bin: {} with uri_name: {}\n".format(i, uri_name))
-        if uri_name.find("rtsp://") == 0 :
-            is_live = True
-        source_bin=create_source_bin(i, uri_name)
+    #for i in range(number_sources):
+    i = 0
+    for ordered_key in call_order_of_keys:
+        i += 1
+        frame_count["stream_"+str(ordered_key)] = 0
+        saved_count["stream_"+str(ordered_key)] = 0
+        uri_name = scfg[ordered_key]['source']
+        com.log_debug("Creating source_bin: {}.- {} with uri_name: {}\n".format(i, ordered_key, uri_name))
+        #if uri_name.find("rtsp://") == 0 :
+        #    is_live = True
+        source_bin = create_source_bin(ordered_key, uri_name)
+        #source_bin = create_source_bin(i, uri_name)
         if not source_bin:
-            com.log_error("Unable to create source bin \n")
+            com.log_error("Unable to create source bin")
         pipeline.add(source_bin)
-        padname="sink_%u" %i
-        sinkpad= streammux.get_request_pad(padname) 
+        padname = "sink_%u" %i
+        sinkpad = streammux.get_request_pad(padname)
         if not sinkpad:
-            com.log_error("Unable to create sink pad bin \n")
-        srcpad=source_bin.get_static_pad("src")
+            com.log_error("Unable to create sink pad bin")
+        srcpad = source_bin.get_static_pad("src")
         if not srcpad:
-            com.log_error("Unable to create src pad bin \n")
+            com.log_error("Unable to create src pad bin")
         srcpad.link(sinkpad)
 
-    com.log_debug("Creating Pgie \n ")
+    com.log_debug("Creating Pgie")
     pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
     if not pgie:
-        com.log_error(" Unable to create pgie \n")
+        com.log_error(" Unable to create pgie")
     
     # Creation of tracking to follow up the model face
     # April 21th
     # ERM
     tracker = Gst.ElementFactory.make("nvtracker", "tracker")
     if not tracker:
-        com.log_error(" Unable to create tracker \n")
-    
+        com.log_error(" Unable to create tracker")
     
     # Add nvvidconv1 and filter1 to convert the frames to RGBA
     # which is easier to work with in Python.
-    print("Creating nvvidconv1 \n ")
+    com.log_debug("Creating nvvidconv1 ")
     nvvidconv1 = Gst.ElementFactory.make("nvvideoconvert", "convertor1")
     if not nvvidconv1:
-        com.log_error(" Unable to create nvvidconv1 \n")
-    print("Creating filter1 \n ")
+        com.log_error(" Unable to create nvvidconv1")
+    com.log_debug("Creating filter1")
     caps1 = Gst.Caps.from_string("video/x-raw(memory:NVMM), format=RGBA")
     filter1 = Gst.ElementFactory.make("capsfilter", "filter1")
     if not filter1:
-        com.log_error(" Unable to get the caps filter1 \n")
+        com.log_error(" Unable to get the caps filter1")
     filter1.set_property("caps", caps1)
-    print("Creating tiler \n ")
+    com.log_debug("Creating tiler")
     tiler=Gst.ElementFactory.make("nvmultistreamtiler", "nvtiler")
     if not tiler:
-        com.log_error(" Unable to create tiler \n")
-    print("Creating nvvidconv \n ")
+        com.log_error(" Unable to create tiler")
+    com.log_debug("Creating nvvidconv")
     nvvidconv = Gst.ElementFactory.make("nvvideoconvert", "convertor")
     if not nvvidconv:
-        com.log_error(" Unable to create nvvidconv \n")
-    print("Creating nvosd \n ")
+        com.log_error(" Unable to create nvvidconv")
+    com.log_debug("Creating nvosd")
     nvosd = Gst.ElementFactory.make("nvdsosd", "onscreendisplay")
     if not nvosd:
-        com.log_error(" Unable to create nvosd \n")
+        com.log_error(" Unable to create nvosd")
     if(is_aarch64()):
-        print("Creating transform \n ")
+        com.log_debug("Creating transform")
         transform=Gst.ElementFactory.make("nvegltransform", "nvegl-transform")
         if not transform:
-            com.log_error(" Unable to create transform \n")
+            com.log_error(" Unable to create transform")
 
-    print("Creating EGLSink \n")
+    com.log_debug("Creating EGLSink")
     # edgar: cambio esta linea para no desplegar video - 
     #sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
     sink = Gst.ElementFactory.make("fakesink", "fakesink")
 
     if not sink:
-        com.log_error(" Unable to create egl sink \n")
+        com.log_error(" Unable to create egl sink")
 
     if is_live:
-        print("Atleast one of the sources is live")
+        com.log_debug("At least one of the sources is live")
         streammux.set_property('live-source', 1)
 
     # Camaras meraki 720p
@@ -1043,7 +1019,7 @@ def main(args):
     pgie.set_property('config-file-path',CURRENT_DIR + "/configs/pgie_config_facenet.txt")
     pgie_batch_size=pgie.get_property("batch-size")
     if(pgie_batch_size != number_sources):
-        print("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources," \n")
+        com.log_debug("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources)
         pgie.set_property("batch-size",number_sources)
 
     # Set properties of tracker
@@ -1093,7 +1069,7 @@ def main(args):
         nvvidconv1.set_property("nvbuf-memory-type", mem_type)
         tiler.set_property("nvbuf-memory-type", mem_type)
 
-    print("Adding elements to Pipeline \n")
+    com.log_debug("Adding elements to Pipeline")
 
     # Add tracker in pipeline
     # April 21th
@@ -1110,7 +1086,7 @@ def main(args):
         pipeline.add(transform)
     pipeline.add(sink)
 
-    print("Linking elements in the Pipeline \n")
+    com.log_debug("Linking elements in the Pipeline")
 
     streammux.link(pgie)
     pgie.link(tracker)        # se añade para tracker
@@ -1134,25 +1110,25 @@ def main(args):
 
     #tiler_sink_pad=tiler.get_static_pad("sink")
     #if not tiler_sink_pad:
-    #    com.log_error(" Unable to get src pad \n")
+    #    com.log_error(" Unable to get src pad")
     #else:
     #    tiler_sink_pad.add_probe(Gst.PadProbeType.BUFFER, tiler_sink_pad_buffer_probe, 0)
     
     tiler_src_pad=tiler.get_static_pad("src")
     if not tiler_src_pad:
-        com.log_error(" Unable to get src pad \n")
+        com.log_error(" Unable to get src pad")
     else:
         tiler_src_pad.add_probe(Gst.PadProbeType.BUFFER, tiler_src_pad_buffer_probe, 0)
 
     # List the sources
-    print("Now playing...")
+    com.log_debug("Now playing...")
     for dictionary in scfg:
-            com.log_debug("Now playing ... {}".format(dictionary['source']))
+        com.log_debug("Now playing ... {}".format(scfg[dictionary]['source']))
     #for i, source in enumerate(args[:-1]):
     #    if (i != 0):
     #        print(i, ": ", source)
 
-    print("Starting pipeline \n")
+    com.log_debug("Starting pipeline")
     # start play back and listed to events		
     pipeline.set_state(Gst.State.PLAYING)
     try:
