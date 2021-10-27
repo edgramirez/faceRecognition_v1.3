@@ -407,8 +407,8 @@ def compare_pickle_against_unknown_images(pickle_file, image_dir):
             if cv2.waitKey(0) == ord('q'):
                 cv2.destroyAllWindows()
         else:
-            print("Image to search does not contains faces")
-            print(file_path)
+            com.log_debug("Image to search does not contains faces")
+            com.log_debug(file_path)
 
 
 def compare_data(data_file, known_faces_data, tolerated_difference_list):
