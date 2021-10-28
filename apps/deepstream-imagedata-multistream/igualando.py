@@ -146,27 +146,37 @@ def set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name):
 
 
 def set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
-    seach_db_name = com.BLACKLIST_DB + '/blackList_' + camera_service_id + '_db.dat'
-    if com.file_exists_and_not_empty(seach_db_name):
+    search_db_name = com.BLACKLIST_DB + '/blackList_db.dat'
+    if 'blacklistDbFile' in scfg[camera_service_id]:
+        old_search_db_name = search_db_name
+        search_db_name = com.BLACKLIST_DB + '/' + scfg[camera_service_id]['blacklistDbFile']
+        com.log_debug("Changing default blacklist db file from: {} to {}".format(old_search_db_name, search_db_name))
+
+    if com.file_exists_and_not_empty(search_db_name):
         set_output_db_name(camera_service_id, input_output_db_name)
-        set_known_faces_db_name(camera_service_id, seach_db_name)
+        set_known_faces_db_name(camera_service_id, search_db_name)
         encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_service_id), False)
         set_known_faces_db(camera_service_id, encodings, metadata)
         return True
 
-    com.log_error('Unable to setup blacklist input/output service variables - blacklist seach db "{}" does not exists'.format(seach_db_name))
+    com.log_error('Unable to setup blacklist input/output service variables - blacklist seach db "{}" does not exists'.format(search_db_name))
 
 
 def set_whitelist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
-    seach_db_name = com.WHITELIST_DB + '/whiteList_' + camera_service_id + '_db.dat'
-    if com.file_exists_and_not_empty(seach_db_name):
+    search_db_name = com.WHITELIST_DB + '/whiteList_db.dat'
+    if 'whitelistDbFile' in scfg[camera_service_id]:
+        old_search_db_name = search_db_name
+        search_db_name = com.WHITELIST_DB + '/' + scfg[camera_service_id]['whitelistDbFile']
+        com.log_debug("Changing default whitelist db file from: {} to {}".format(old_search_db_name, search_db_name))
+
+    if com.file_exists_and_not_empty(search_db_name):
         set_output_db_name(camera_service_id, input_output_db_name)
-        set_known_faces_db_name(camera_service_id, db_name)
+        set_known_faces_db_name(camera_service_id, search_db_name)
         encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_service_id), False)
         set_known_faces_db(camera_service_id, encodings, metadata)
         return True
 
-    com.log_error('Unable to setup whitelist input/output service variables - whitelist seach db "{}" does not exists'.format(seach_db_name))
+    com.log_error('Unable to setup whitelist input/output service variables - whitelist seach db "{}" does not exists'.format(search_db_name))
 
 
 def set_service_outputs_and_variables(camera_service_id, group_type):
@@ -197,7 +207,12 @@ def set_action(camera_service_id, service_name):
     service_list = [item for item in com.SERVICE_DEFINITION.keys()]
 
     if service_name in service_list:
-        input_output_db_name = com.RESULTS_DIRECTORY + '/general_found_faces_db' + camera_service_id + '_.dat'
+        input_output_db_name = com.RESULTS_DIRECTORY + '/general_found_faces_db_.dat'
+
+        if 'generalFaceDectDbFile' in scfg[camera_service_id]:
+            com.log_debug("Changing default general db file from: {} to {}".format(input_output_db_name, scfg[camera_service_id]['generalDectFaceDbFile']))
+            input_output_db_name = com.RESULTS_DIRECTORY + '/' + scfg[camera_service_id]['generalDectFaceDbFile']
+
         action.update({camera_service_id: service_name})
 
         if action[camera_service_id] == service_list[0]:
@@ -902,7 +917,7 @@ def main(args):
 
     number_sources = len(scfg)
     is_live = False
-    com.log_debug(scfg)
+    com.log_debug("Final configuration: {}".format(scfg))
     for camera_service_id  in scfg:
         call_order_of_keys.append(camera_service_id)
         set_action(camera_service_id, scfg[camera_service_id]['serviceType'])
@@ -1019,8 +1034,8 @@ def main(args):
     pgie.set_property('config-file-path',CURRENT_DIR + "/configs/pgie_config_facenet.txt")
     pgie_batch_size=pgie.get_property("batch-size")
     if(pgie_batch_size != number_sources):
-        com.log_debug("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources)
-        pgie.set_property("batch-size",number_sources)
+        com.log_debug("WARNING: Overriding infer-config batch-size '{}', with number of sources {}".format(pgie_batch_size, number_sources))
+        pgie.set_property("batch-size", number_sources)
 
     # Set properties of tracker
     # April 21th
@@ -1124,9 +1139,6 @@ def main(args):
     com.log_debug("Now playing...")
     for dictionary in scfg:
         com.log_debug("Now playing ... {}".format(scfg[dictionary]['source']))
-    #for i, source in enumerate(args[:-1]):
-    #    if (i != 0):
-    #        print(i, ": ", source)
 
     com.log_debug("Starting pipeline")
     # start play back and listed to events		
