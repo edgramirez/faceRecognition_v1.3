@@ -21,61 +21,69 @@ SERVICE_DEFINITION = {
                 'cameraId':     'str',
                 },
             'optional': {
-                'faceDbFile':       'str',
-                'checkBlackList':   'bool',
-                'checkWhieteList':  'bool',
-                'ignorePreviousDb': 'bool',
-                'saveFacesDb':      'bool'
+                'generalFaceDectDbFile':    'str',
+                'blacklistDbFile':          'str',
+                'whitelistDbFile':          'str',
+                'checkBlackList':           'bool',
+                'checkWhieteList':          'bool',
+                'ignorePreviousDb':         'bool',
+                'saveFacesDb':              'bool'
                 }
         },
         "blackList": {
             'obligaroty': {
-                'enabled':      'bool',
-                'source':       'str',
-                'cameraId':     'str',
+                'enabled':  'bool',
+                'source':   'str',
+                'cameraId': 'str',
                 },
             'optional': {
-                'faceDbFile':       'str',
-                'checkWhiteList':   'bool',
-                'ignorePreviousDb': 'bool',
-                'saveFacesDb':      'bool'
+                'generalFaceDectDbFile':    'str',
+                'blacklistDbFile':          'str',
+                'whitelistDbFile':          'str',
+                'checkWhiteList':           'bool',
+                'ignorePreviousDb':         'bool',
+                'saveFacesDb':              'bool'
                 }
         },
         "whiteList": {
             'obligaroty': {
-                'enabled':      'bool',
-                'source':       'str',
-                'cameraId':     'str',
+                'enabled':  'bool',
+                'source':   'str',
+                'cameraId': 'str',
                 },
             'optional': {
-                'faceDbFile':       'str',
-                'checkBlackList':   'bool',
-                'ignorePreviousDb': 'bool',
-                'saveFacesDb':      'bool'
+                'generalFaceDectDbFile':    'str',
+                'blacklistDbFile':          'str',
+                'whitelistDbFile':          'str',
+                'checkBlackList':           'bool',
+                'ignorePreviousDb':         'bool',
+                'saveFacesDb':              'bool'
                 }
         },
         "recurrence": {
             'obligaroty': {
-                'enabled':      'bool',
-                'source':       'str',
-                'cameraId':     'str',
+                'enabled':  'bool',
+                'source':   'str',
+                'cameraId': 'str',
                 },
             'optional': {
-                'faceDbFile':       'str',
-                'checkBlackList':   'bool',
-                'checkWhieteList':  'bool',
+                'generalFaceDectDbFile':    'str',
+                'blacklistDbFile':          'str',
+                'whitelistDbFile':          'str',
+                'checkBlackList':           'bool',
+                'checkWhieteList':          'bool',
                 }
         },
         "ageAndGender": {
             'obligaroty': {
-                'enabled':      'bool',
-                'source':       'str',
-                'cameraId':     'str',
+                'enabled':  'bool',
+                'source':   'str',
+                'cameraId': 'str',
                 },
             'optional': {
-                'faceDbFile':       'str',
-                'ignorePreviousDb': 'bool',
-                'saveFacesDb':      'bool'
+                'generalFaceDectDbFile':    'str',
+                'ignorePreviousDb':         'bool',
+                'saveFacesDb':              'bool'
                 }
         }
     }
