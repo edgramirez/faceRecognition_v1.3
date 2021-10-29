@@ -39,7 +39,7 @@
             "serviceType": "whiteList",
             "source": "file:///tmp/amlo.mp4",
             "cameraId": "camera2_mac_address",
-            "enabled": true
+            "enabled": false
             },
         "service3": {
             "serviceType": "ageAndGender",
@@ -52,16 +52,16 @@
             "serviceType": "recurrence",
             "source": "file:///tmp/amlo.mp4",
             "cameraId": "camera2_mac_address",
-            "enabled": false,
-            "generalFaceDectDbFile": "recurrence_service2.dat",
-            "checkBlackList": true,
-            "checkWhiteList": true
+            "enabled": true,
+            "checkBlackList": false,
+            "blacklistDbFile": "edgarblack",
+            "checkWhiteList": false
             },
         "service6": {
             "serviceType": "blackList",
             "source": "file:///tmp/amlo.mp4",
             "cameraId": "camera2_mac_address",
-            "enabled": true
+            "enabled": false
             }
         }
 }
