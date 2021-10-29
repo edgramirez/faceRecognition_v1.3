@@ -449,6 +449,7 @@ def update_not_applicable_id(camera_service_id, new_value, best_index = None):
 
 
 def update_known_faces_indexes(camera_service_id, new_value, best_index = None):
+    # TODO edgar referenciar todo con respecto del camera_service_id
     global known_faces_indexes
     if best_index is not None:
         known_faces_indexes[best_index] = new_value
@@ -484,6 +485,7 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
         if obj_id in known_faces_indexes:
             return False
 
+        # Try to see if deepstream detected image can be face encoded image_encoding is None is not possible
         img_encoding, img_metadata = biblio.encode_face_image(image, name, camera_service_id, confidence, False)
 
         # is not in the know_faces_index but did not generate an encoding result
@@ -1141,6 +1143,7 @@ def main(args):
         com.log_debug("Now playing ... {}".format(scfg[dictionary]['source']))
 
     com.log_debug("Starting pipeline")
+    quit()
     # start play back and listed to events		
     pipeline.set_state(Gst.State.PLAYING)
     try:
