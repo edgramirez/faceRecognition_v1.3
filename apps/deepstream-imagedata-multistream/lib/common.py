@@ -38,9 +38,9 @@ SERVICE_DEFINITION = {
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
+                'checkWhiteList':           'bool',
                 'blacklistDbFile':          'str',
                 'whitelistDbFile':          'str',
-                'checkWhiteList':           'bool',
                 'ignorePreviousDb':         'bool',
                 'saveFacesDb':              'bool'
                 }
@@ -53,9 +53,9 @@ SERVICE_DEFINITION = {
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
+                'checkBlackList':           'bool',
                 'blacklistDbFile':          'str',
                 'whitelistDbFile':          'str',
-                'checkBlackList':           'bool',
                 'ignorePreviousDb':         'bool',
                 'saveFacesDb':              'bool'
                 }
