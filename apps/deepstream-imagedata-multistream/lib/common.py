@@ -22,10 +22,10 @@ SERVICE_DEFINITION = {
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
-                'blacklistDbFile':          'str',
-                'whitelistDbFile':          'str',
                 'checkBlackList':           'bool',
-                'checkWhieteList':          'bool',
+                'blacklistDbFile':          'str',
+                'checkWhiteList':           'bool',
+                'whitelistDbFile':          'str',
                 'ignorePreviousDb':         'bool',
                 'saveFacesDb':              'bool'
                 }
@@ -68,10 +68,10 @@ SERVICE_DEFINITION = {
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
-                'blacklistDbFile':          'str',
-                'whitelistDbFile':          'str',
                 'checkBlackList':           'bool',
-                'checkWhieteList':          'bool',
+                'blacklistDbFile':          'str',
+                'checkWhiteList':           'bool',
+                'whitelistDbFile':          'str',
                 }
         },
         "ageAndGender": {
