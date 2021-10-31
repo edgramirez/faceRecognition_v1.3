@@ -1143,7 +1143,6 @@ def main(args):
         com.log_debug("Now playing ... {}".format(scfg[dictionary]['source']))
 
     com.log_debug("Starting pipeline")
-    quit()
     # start play back and listed to events		
     pipeline.set_state(Gst.State.PLAYING)
     try:
@@ -1151,7 +1150,7 @@ def main(args):
     except:
         pass
     # cleanup
-    print("Exiting app\n")
+    com.log_debug("Exiting app\n")
     pipeline.set_state(Gst.State.NULL)
 
 if __name__ == '__main__':
