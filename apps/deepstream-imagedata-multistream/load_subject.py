@@ -18,7 +18,11 @@ if sys.argv[1] == 'newBlackList':
         blacklist_results_dir = base_input_dir + '/blacklist_db'
         com.create_data_dir(blacklist_results_dir)
         com.create_data_dir(blacklist_face_images)
-        blacklist_data = blacklist_results_dir + '/BlackList.dat'
+        #blacklist_data = blacklist_results_dir + '/' + 'BlackList.dat'
+        try:
+            blacklist_data = blacklist_results_dir + '/' + com.BLACKLIST_DB_NAME
+        except AttributeError:
+            com.log_error("Configuration error - environment variable 'BLACKLIST_DB_NAME' not set")
     else:
         com.log_error(msg)
 
@@ -33,7 +37,11 @@ elif sys.argv[1] == 'newWhiteList':
         whitelist_results_dir = base_input_dir + '/whitelist_db'
         com.create_data_dir(whitelist_results_dir)
         com.create_data_dir(whitelist_face_images)
-        whitelist_data = whitelist_results_dir + '/WhiteList.dat'
+        #whitelist_data = whitelist_results_dir + '/WhiteList.dat'
+        try:
+            whitelist_data = whitelist_results_dir + '/' + com.WHITELIST_DB_NAME
+        except AttributeError:
+            com.log_error("Configuration error - environment variable 'WHITELIST_DB_NAME' not set")
     else:
         com.log_error(msg)
 
