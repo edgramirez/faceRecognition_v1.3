@@ -89,11 +89,38 @@ SERVICE_DEFINITION = {
     }
 
 
-RESULTS_DIRECTORY   = os.environ['RESULTS_DIRECTORY']
-INPUT_DB_DIRECTORY  = os.environ['INPUT_DB_DIRECTORY']
-TMP_RESULTS_DIR     = os.environ['TMP_RESULTS_DIR']
-BLACKLIST_DB        = INPUT_DB_DIRECTORY + '/blacklist_db'
-WHITELIST_DB        = INPUT_DB_DIRECTORY + '/whitelist_db'
+def log_error(msg, _quit = True):
+    print("\n")
+    print("-- PARAMETER ERROR --\n"*2)
+    print(" %s " % msg)
+    print("\n")
+    print("-- PARAMETER ERROR --\n"*2)
+    print("\n")
+    if _quit:
+        quit()
+    else:
+        return False
+
+
+def log_debug(msg):
+    print("\n------- %s -------" % msg)
+
+
+try:
+    RESULTS_DIRECTORY   = os.environ['RESULTS_DIRECTORY']
+except KeyError:
+    print('\nSetting up "DELETE_PREVIOUS_TMP_RESULTS" variable to "False" by default')
+    DELETE_PREVIOUS_TMP_RESULTS = False
+
+try:
+    INPUT_DB_DIRECTORY  = os.environ['INPUT_DB_DIRECTORY']
+except KeyError:
+    log_error('\nUnable to read value of variable "INPUT_DB_DIRECTORY"  -- Set the variable in /home/$USER/.bashrc')
+
+try:
+    TMP_RESULTS_DIR     = os.environ['TMP_RESULTS_DIR']
+except KeyError:
+    log_error('\nUnable to read value of variable "TMP_RESULTS_DIR"  -- Set the variable in /home/$USER/.bashrc')
 
 try:
     DELETE_PREVIOUS_TMP_RESULTS = os.environ['DELETE_PREVIOUS_TMP_RESULTS']
@@ -101,6 +128,9 @@ except KeyError:
     print('\nSetting up "DELETE_PREVIOUS_TMP_RESULTS" variable to "False" by default')
     DELETE_PREVIOUS_TMP_RESULTS = False
 
+
+BLACKLIST_DB = INPUT_DB_DIRECTORY + '/blacklist_db'
+WHITELIST_DB = INPUT_DB_DIRECTORY + '/whitelist_db'
 
 
 def dir_exists(path_str):
@@ -126,23 +156,6 @@ def delete_tree(path_str, match_pattern = None):
             log_error("Error: {} - {}. (Unable to delete path '{}')".format(e.filename, e.strerror, path_str))
     else:
         log_debug("Directory path '{}' does not exist, nothing to do".format(path_str))
-
-
-def log_error(msg, _quit = True):
-    print("\n")
-    print("-- PARAMETER ERROR --\n"*2)
-    print(" %s " % msg)
-    print("\n")
-    print("-- PARAMETER ERROR --\n"*2)
-    print("\n")
-    if _quit:
-        quit()
-    else:
-        return False
-
-
-def log_debug(msg):
-    print("\n------- %s -------" % msg)
 
 
 def file_exists(file_name):
