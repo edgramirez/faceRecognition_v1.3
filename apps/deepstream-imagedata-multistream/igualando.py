@@ -146,10 +146,10 @@ def set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name):
 
 
 def set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
-    search_db_name = com.BLACKLIST_DB + '/blackList_db.dat'
+    search_db_name = com.BLACKLIST_DB_DIRECTORY + '/' + com.BLACKLIST_DB_NAME
     if 'blacklistDbFile' in scfg[camera_service_id]:
         old_search_db_name = search_db_name
-        search_db_name = com.BLACKLIST_DB + '/' + scfg[camera_service_id]['blacklistDbFile']
+        search_db_name = com.BLACKLIST_DB_DIRECTORY + '/' + scfg[camera_service_id]['blacklistDbFile']
         com.log_debug("Changing default blacklist db file from: {} to {}".format(old_search_db_name, search_db_name))
 
     if com.file_exists_and_not_empty(search_db_name):
@@ -163,10 +163,10 @@ def set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
 
 
 def set_whitelist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
-    search_db_name = com.WHITELIST_DB + '/whiteList_db.dat'
+    search_db_name = com.WHITELIST_DB_DIRECTORY + '/' + com.WHITELIST_DB_NAME
     if 'whitelistDbFile' in scfg[camera_service_id]:
         old_search_db_name = search_db_name
-        search_db_name = com.WHITELIST_DB + '/' + scfg[camera_service_id]['whitelistDbFile']
+        search_db_name = com.WHITELIST_DB_DIRECTORY + '/' + scfg[camera_service_id]['whitelistDbFile']
         com.log_debug("Changing default whitelist db file from: {} to {}".format(old_search_db_name, search_db_name))
 
     if com.file_exists_and_not_empty(search_db_name):
@@ -217,10 +217,10 @@ def set_action(camera_service_id, service_name):
 
         if action[camera_service_id] == service_list[0]:
             com.log_debug('set find variables for service id: {}'.format(camera_service_id))
-        elif action[camera_service_id] == service_list[1]:
+        elif com.BLACKLIST_DB_NAME and action[camera_service_id] == service_list[1]:
             com.log_debug('set "blackList" variables for service id: {}'.format(camera_service_id))
             set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
-        elif action[camera_service_id] == service_list[2]:
+        elif com.WHITELIST_DB_NAME and action[camera_service_id] == service_list[2]:
             com.log_debug('set "whiteList" variables for service id: {}'.format(camera_service_id))
             set_whitelist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
         elif action[camera_service_id] == service_list[3]:
