@@ -106,6 +106,10 @@ def log_debug(msg):
     print("\n------- %s -------" % msg)
 
 
+def log_warning(msg):
+    print("\n WARNING ------- %s -------" % msg)
+
+
 try:
     RESULTS_DIRECTORY   = os.environ['RESULTS_DIRECTORY']
 except KeyError:
@@ -125,12 +129,22 @@ except KeyError:
 try:
     DELETE_PREVIOUS_TMP_RESULTS = os.environ['DELETE_PREVIOUS_TMP_RESULTS']
 except KeyError:
-    print('\nSetting up "DELETE_PREVIOUS_TMP_RESULTS" variable to "False" by default')
+    log_error('\nSetting up "DELETE_PREVIOUS_TMP_RESULTS" variable to "False" by default')
     DELETE_PREVIOUS_TMP_RESULTS = False
 
+try:
+    BLACKLIST_DB_NAME = os.environ['BLACKLIST_DB_NAME']
+except KeyError:
+    log_warning('\nEnvironment variable "BLACKLIST_DB_NAME" not set')
 
-BLACKLIST_DB = INPUT_DB_DIRECTORY + '/blacklist_db'
-WHITELIST_DB = INPUT_DB_DIRECTORY + '/whitelist_db'
+try:
+    WHITELIST_DB_NAME = os.environ['WHITELIST_DB_NAME']
+except KeyError:
+    log_warning('\nEnvironment variable "WHITELIST_DB_NAME" not set')
+
+
+BLACKLIST_DB_DIRECTORY = INPUT_DB_DIRECTORY + '/blacklist_db'
+WHITELIST_DB_DIRECTORY = INPUT_DB_DIRECTORY + '/whitelist_db'
 
 
 def dir_exists(path_str):
