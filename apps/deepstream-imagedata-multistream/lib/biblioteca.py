@@ -12,10 +12,8 @@ import lib.validate as validate
 from datetime import datetime, timedelta
 
 global header
-global srv_url
 
 font = cv2.FONT_HERSHEY_SIMPLEX
-srv_url = os.environ['USER_SERVER_ENDPOINT']
 header = None
 
 ##### GENERIC FUNCTIONS
@@ -35,29 +33,32 @@ def set_header(token_file = None):
         header = {'Content-type': 'application/json', 'X-KAIROS-TOKEN': token_handler.read().split('\n')[0]}
         print('Header correctly set')
         return True
+    com.log_error('Unable to read token')
 
-    return False
 
 
 def get_server_info_from_server(abort_if_exception = True, quit_program = True):
-    global srv_url
-    url = srv_url + 'tx/device.getConfigByProcessDevice'
+    get_srv_info_url = com.GET_SERVER_CONFIG_URI
+    # url = srv_url + 'tx/device.getConfigByProcessDevice'
     for machine_id in com.get_machine_macaddresses():
         #machine_id = '00:04:4b:eb:f6:dd'  # HARDCODED MACHINE ID
         #print('machine_id: ', machine_id)
         data = {"id": machine_id}
         
         if abort_if_exception:
-            response = send_json(data, 'POST', url)
+            response = send_json(data, 'POST', get_srv_info_url)
         else:
             options = {'abort_if_exception': False}
-            response = send_json(data, 'POST', url, **options)
+            response = send_json(data, 'POST', get_srv_info_url, **options)
         
         if response.status_code == 200:
-            if json.loads(response.text)['ERROR']:
-                com.log_debug("Server answered with errors: {}".format(json.loads(response.text)))
-                return False
-            return json.loads(response.text).keys()
+            try:
+                if json.loads(response.text)['ERROR']:
+                    com.log_debug("Server answered with errors: {}".format(json.loads(response.text)))
+                    return False
+            except KeyError:
+                com.log_debug("No error detected in the response")
+            return json.loads(response.text)
         else:
             return com.log_error("Unable to retrieve the device configuration from the Server. Server response".format(response), quit_program = quit_program)
 
@@ -75,9 +76,16 @@ def get_server_info_from_file(file_path, abort_if_exception = True):
 
 
 def get_server_info(abort_if_exception = True, quit_program = True):
-    scfg = get_server_info_from_server(abort_if_exception, quit_program)
+    # edgar
+    # TESTIN edgar enable this after testin 
+    #scfg = get_server_info_from_server(abort_if_exception, quit_program)
+    #print(scfg)
+    #quit()
+    scfg = False # HARCODED value for testing purposes
+
     if scfg is False:
         scfg = get_server_info_from_file('configs/Server_Emulatation_configs_from_Excel.py', abort_if_exception)
+
     # check the return information is actually for this machine by comparing the ID and validate all the parameters
     return validate.parse_parameters_and_values_from_config(scfg)
 
@@ -442,7 +450,6 @@ def compare_data(data_file, known_faces_data, tolerated_difference_list):
                     print('initial {}'.format(video_faces_metadata[best_index]['first_seen']))
                     print('last {}'.format(video_faces_metadata[best_index]['last_seen']))
                     print('distance: {}'.format(lowest_distances))
-    #quit()
 
     '''
         if best_index:
