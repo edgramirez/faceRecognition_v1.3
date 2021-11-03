@@ -59,6 +59,7 @@ def check_optional_keys(data, service_definition):
 def check_service_against_definition(data):
     if not isinstance(data, dict):
         com.log_error("Configuration error - data must be a list of dictionaries - type: {} / content: {}".format(type(data), data))
+
     for dictionary in data.keys():
         com.log_debug("Validating config of service: '--{} / {}--' against the definition".format(dictionary, data[dictionary]['serviceType']))
         for parameters in data[dictionary]:
@@ -68,7 +69,7 @@ def check_service_against_definition(data):
     return True
 
 
-def validate_service_exits(data):
+def validate_service_exists(data):
     service_list = com.SERVICE_DEFINITION.keys()
     for camera_service_id in data.keys():
         if data[camera_service_id]['serviceType'] not in service_list:
@@ -132,7 +133,7 @@ def parse_parameters_and_values_from_config(config_data):
     scfg = get_config_filtered_by_active_service(scfg)
 
     # validate requested services exists in code
-    validate_service_exits(scfg)
+    validate_service_exists(scfg)
 
     # Check all obligatory and optional parameters and values types provided by the dashboard config
     check_service_against_definition(scfg)
