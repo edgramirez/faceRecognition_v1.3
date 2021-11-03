@@ -1,58 +1,53 @@
 { 
     "FA:KE:4b:8d:49:68" : {
-        "service1": {
+        "camera1_mac_address": {
             "serviceType": "find",
             "source": "file:///tmp/amlo.mp4",
-            "cameraId": "camera1_mac_address",
             "enabled": true,
             "generalFaceDectDbFile": "found_service1.dat",
             "checkBlackList": true,
-            "checkWhieteList": true,
+            "checkWhiteList": true,
             "ignorePreviousDb": true,
             "saveFacesDb": true
             },
-        "service2": {
+        "camera2_mac_address": {
             "serviceType": "find",
             "source": "file:///tmp/amlo.mp4",
-            "cameraId": "camera2_mac_address",
             "enabled": true,
             "generalFaceDectDbFile": "found_service2.dat",
             "checkBlackList": true,
-            "checkWhieteList": true,
+            "checkWhiteList": true,
             "ignorePreviousDb": true,
             "saveFacesDb": true
             }
         },
-    "00:04:4b:8d:49:68" : {
-        "service1": {
+    "9c:7b:ef:2a:b6:07" : {
+        "camera11_mac_address": {
             "serviceType": "find",
             "source": "file:///tmp/amlo.mp4",
-            "cameraId": "camera1_mac_address",
-            "enabled": false,
+            "enabled": true,
             "generalFaceDectDbFile": "found_service1.dat",
             "checkBlackList": true,
-            "checkWhieteList": true,
+            "checkWhiteList": true,
             "ignorePreviousDb": true,
-            "saveFacesDb": true
+            "saveFacesDb": false 
             },
-        "service2": {
-            "serviceType": "whiteList",
+        "camera12_mac_address": {
+            "serviceType": "blackList",
             "source": "file:///tmp/amlo.mp4",
-            "cameraId": "camera2_mac_address",
-            "enabled": false
+            "enabled": false 
             },
-        "service3": {
+        "camera13_mac_address": {
             "serviceType": "ageAndGender",
             "source": "file:///tmp/amlo.mp4",
-            "cameraId": "camera3_mac_address",
             "enabled": false,
             "generalFaceDectDbFile": "age_and_gender_service3.dat"
             },
-        "service4": {
+        "camera14_mac_address": {
             "serviceType": "recurrence",
             "source": "file:///tmp/amlo.mp4",
-            "cameraId": "camera2_mac_address",
-            "enabled": true,
+            "cameraId": "camera2_mac_address ESTE SERVICIO FALLA YA QUE EJECUTA BLACKLIST instead of recurrence",
+            "enabled": false,
             "checkBlackList": false,
             "blacklistDbFile": "edgarblack",
             "checkWhiteList": false
@@ -60,7 +55,6 @@
         "service6": {
             "serviceType": "blackList",
             "source": "file:///tmp/amlo.mp4",
-            "cameraId": "camera2_mac_address",
             "enabled": false
             }
         }
