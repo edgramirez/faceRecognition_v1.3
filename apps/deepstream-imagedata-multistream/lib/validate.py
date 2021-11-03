@@ -126,7 +126,6 @@ def get_config_filtered_by_local_mac(config_data):
 
 def parse_parameters_and_values_from_config(config_data):
     # filter config and get only data for this server using the mac to match
-    #scfg, local_server_id = get_config_filtered_by_local_mac(config_data)
     scfg = get_config_filtered_by_local_mac(config_data)
 
     # filter config and get only data of active services
