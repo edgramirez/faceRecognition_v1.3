@@ -18,7 +18,6 @@ SERVICE_DEFINITION = {
             'obligaroty': {
                 'enabled':      'bool',
                 'source':       'str',
-                'cameraId':     'str',
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
@@ -34,7 +33,6 @@ SERVICE_DEFINITION = {
             'obligaroty': {
                 'enabled':  'bool',
                 'source':   'str',
-                'cameraId': 'str',
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
@@ -49,7 +47,6 @@ SERVICE_DEFINITION = {
             'obligaroty': {
                 'enabled':  'bool',
                 'source':   'str',
-                'cameraId': 'str',
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
@@ -64,7 +61,6 @@ SERVICE_DEFINITION = {
             'obligaroty': {
                 'enabled':  'bool',
                 'source':   'str',
-                'cameraId': 'str',
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
@@ -78,7 +74,6 @@ SERVICE_DEFINITION = {
             'obligaroty': {
                 'enabled':  'bool',
                 'source':   'str',
-                'cameraId': 'str',
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
