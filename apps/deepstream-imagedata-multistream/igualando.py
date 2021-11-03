@@ -146,6 +146,8 @@ def set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name):
 
 
 def set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
+    global scfg
+
     search_db_name = com.BLACKLIST_DB_DIRECTORY + '/' + com.BLACKLIST_DB_NAME
     if 'blacklistDbFile' in scfg[camera_service_id]:
         old_search_db_name = search_db_name
@@ -163,6 +165,8 @@ def set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
 
 
 def set_whitelist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
+    global scfg
+
     search_db_name = com.WHITELIST_DB_DIRECTORY + '/' + com.WHITELIST_DB_NAME
     if 'whitelistDbFile' in scfg[camera_service_id]:
         old_search_db_name = search_db_name
@@ -210,8 +214,8 @@ def set_action(camera_service_id, service_name):
         input_output_db_name = com.RESULTS_DIRECTORY + '/general_found_faces_db_.dat'
 
         if 'generalFaceDectDbFile' in scfg[camera_service_id]:
-            com.log_debug("Changing default general db file from: {} to {}".format(input_output_db_name, scfg[camera_service_id]['generalDectFaceDbFile']))
-            input_output_db_name = com.RESULTS_DIRECTORY + '/' + scfg[camera_service_id]['generalDectFaceDbFile']
+            com.log_debug("Changing default general db file from: {} to {}".format(input_output_db_name, scfg[camera_service_id]['generalFaceDectDbFile']))
+            input_output_db_name = com.RESULTS_DIRECTORY + '/' + scfg[camera_service_id]['generalFaceDectDbFile']
 
         action.update({camera_service_id: service_name})
 
@@ -901,9 +905,8 @@ def create_source_bin(index, uri):
 def main(args):
     global scfg
     scfg = biblio.get_server_info()
-
-    global folder_name
     folder_name = com.TMP_RESULTS_DIR
+
     if path.exists(folder_name):
         if com.DELETE_PREVIOUS_TMP_RESULTS:
             com.log_debug('Automatically deleting the previous Tmp directory at: {}'.format(folder_name))
@@ -920,6 +923,7 @@ def main(args):
     number_sources = len(scfg)
     is_live = False
     com.log_debug("Final configuration: {}".format(scfg))
+
     for camera_service_id  in scfg:
         call_order_of_keys.append(camera_service_id)
         set_action(camera_service_id, scfg[camera_service_id]['serviceType'])
