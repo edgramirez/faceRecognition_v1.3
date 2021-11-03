@@ -39,7 +39,6 @@ def set_header(token_file = None):
 
 def get_server_info_from_server(abort_if_exception = True, quit_program = True):
     get_srv_info_url = com.GET_SERVER_CONFIG_URI
-    # url = srv_url + 'tx/device.getConfigByProcessDevice'
     for machine_id in com.get_machine_macaddresses():
         #machine_id = '00:04:4b:eb:f6:dd'  # HARDCODED MACHINE ID
         #print('machine_id: ', machine_id)
@@ -76,12 +75,7 @@ def get_server_info_from_file(file_path, abort_if_exception = True):
 
 
 def get_server_info(abort_if_exception = True, quit_program = True):
-    # edgar
-    # TESTIN edgar enable this after testin 
-    #scfg = get_server_info_from_server(abort_if_exception, quit_program)
-    #print(scfg)
-    #quit()
-    scfg = False # HARCODED value for testing purposes
+    scfg = get_server_info_from_server(abort_if_exception, quit_program)
 
     if scfg is False:
         scfg = get_server_info_from_file('configs/Server_Emulatation_configs_from_Excel.py', abort_if_exception)
