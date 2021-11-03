@@ -116,6 +116,11 @@ except KeyError:
     log_error('\nUnable to read value of environment variable "USER_SERVER_ENDPOINT"  -- Set the variable in /home/$USER/.bashrc')
 
 try:
+    GET_SERVER_CONFIG_URI = os.environ['GET_SERVER_CONFIG_URI']
+except KeyError:
+    log_error('\nUnable to read value of environment variable "GET_SERVER_CONFIG_URI"  -- Set the variable in /home/$USER/.bashrc')
+
+try:
     RESULTS_DIRECTORY   = os.environ['RESULTS_DIRECTORY']
 except KeyError:
     print('\nSetting up "DELETE_PREVIOUS_TMP_RESULTS" variable to "False" by default')
