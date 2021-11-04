@@ -1,56 +1,58 @@
 import lib.common as com
 
 
-def check_config_keys_exist(config_dictionary):
+def check_config_keys_exist(service_name, service_dictionary):
     joint_elements = []
-    for item in com.SERVICE_DEFINITION[config_dictionary['serviceType']]:
-        for elem in com.SERVICE_DEFINITION[config_dictionary['serviceType']][item].keys():
-            joint_elements.append(elem)
-    for item in config_dictionary:
-        if item != 'serviceType':
-            if item not in joint_elements:
-                com.log_error("Configuration error - Pameter: {}, does not exist in the service definition:".format(item))
+    for group_of_parameters in com.SERVICE_DEFINITION[service_name]:
+        for defined_service_parameter in com.SERVICE_DEFINITION[service_name][group_of_parameters].keys():
+            joint_elements.append(defined_service_parameter)
+    for service_parameter in service_dictionary:
+        if service_parameter not in joint_elements:
+            com.log_error("Configuration error - Pameter: {}, does not exist in the service definition:".format(service_parameter))
 
 
-def validate_sources(data):
+def validate_sources(active_service_configs):
     '''
     Validate the configuration source recovered from server contains correct values
     '''
-    for camera_service_id in data:
-        pattern_not_found = True
-        for pattern in com.SOURCE_PATTERNS:
-            if data[camera_service_id]['source'][0:len(pattern)] == pattern:
-                if data[camera_service_id]['source'][:7] == 'file://' and com.file_exists(data[camera_service_id]['source'][7:]) is False:
-                    com.log_error("Configuration error - Source file: {}, does not exist".format(data[camera_service_id]['source'][7:]))
-                pattern_not_found = False
-                break
-        if pattern_not_found:
-            com.log_error("Configuration error - Source value must start with any of this patterns: {}, Current value: {}".format(com.SOURCE_PATTERNS, data[camera_service_id]['source']))
+    for camera_service_id in active_service_configs:
+        for service in active_service_configs[camera_service_id]:
+            pattern_not_found = True
+            for pattern in com.SOURCE_PATTERNS:
+                if active_service_configs[camera_service_id][service]['source'][0:len(pattern)] == pattern:
+                    if active_service_configs[camera_service_id][service]['source'][:7] == 'file://' and com.file_exists(active_service_configs[camera_service_id][service]['source'][7:]) is False:
+                        com.log_error("Configuration error - Source file: {}, does not exist".format(active_service_configs[camera_service_id][service]['source'][7:]))
+                    pattern_not_found = False
+                    break
+            if pattern_not_found:
+                com.log_error("Configuration error - Source value must start with any of this patterns: {}, Current value: {}".format(com.SOURCE_PATTERNS, active_service_configs[camera_service_id][service]['source']))
 
     com.log_debug('All source values are correct')
     return True
 
 
-def check_obligatory_keys(data, service_definition):
+def check_obligatory_keys(service_dictionaries, service_definition):
     '''
     Validate the configuration recovered from server provided the defined minimum parameters and their values are valid
     '''
-    for item in service_definition['obligaroty'].keys():
-        if item not in data.keys():
-            com.log_error("Configuration error - Missing Obligatory parameter: {}".format(item))
-        if str(type(data[item])).split("'")[1] != service_definition['obligaroty'][item]:
-            com.log_error("Configuration error - Parameter '{}' value must be type : {}, Current value: {}".format(item, service_definition['obligaroty'][item], str(type(data[item])).split("'")[1]))
+    for defined_item in service_definition['obligaroty'].keys():
+        for service_name in service_dictionaries:
+            if defined_item not in service_dictionaries[service_name]:
+                com.log_error("Configuration error - Missing Obligatory parameter: {}".format(defined_item))
+            if str(type(service_dictionaries[service_name][defined_item])).split("'")[1] != service_definition['obligaroty'][defined_item]:
+                com.log_error("Configuration error - Parameter '{}' value must be type : {}, Current value: {}".format(defined_item, service_definition['obligaroty'][defined_item], str(type(service_dictionaries[defined_item])).split("'")[1]))
     com.log_debug("All obligatory parameters are OK")
     return True
 
 
-def check_optional_keys(data, service_definition):
+def check_optional_keys(service_dictionaries, service_definition):
     '''
     Validate the optional configuration recovered from server and its values
     '''
-    for item in service_definition['optional'].keys():
-        if item in data.keys() and str(type(data[item])).split("'")[1] != service_definition['optional'][item]:
-                com.log_error("Configuration error - Parameter '{}' value must be type : {}, Current value: {}".format(item, service_definition['optional'][item], str(type(data[item])).split("'")[1]))
+    for defined_item in service_definition['optional'].keys():
+        for service_name in service_dictionaries:
+            if defined_item in service_dictionaries[service_name] and str(type(service_dictionaries[service_name][defined_item])).split("'")[1] != service_definition['optional'][defined_item]:
+                    com.log_error("Configuration error - Parameter '{}' value must be type : {}, Current value: {}".format(defined_item, service_definition['optional'][defined_item], str(type(service_dictionaries[service][defined_item])).split("'")[1]))
 
     com.log_debug("All optional parameters are OK")
     return True
@@ -60,20 +62,21 @@ def check_service_against_definition(data):
     if not isinstance(data, dict):
         com.log_error("Configuration error - data must be a list of dictionaries - type: {} / content: {}".format(type(data), data))
 
-    for dictionary in data.keys():
-        com.log_debug("Validating config of service: '--{} / {}--' against the definition".format(dictionary, data[dictionary]['serviceType']))
-        for parameters in data[dictionary]:
-            check_config_keys_exist(data[dictionary])
-        check_obligatory_keys(data[dictionary], com.SERVICE_DEFINITION[data[dictionary]['serviceType']])
-        check_optional_keys(data[dictionary], com.SERVICE_DEFINITION[data[dictionary]['serviceType']])
+    for srv_camera_id in data.keys():
+        for service in data[srv_camera_id].keys():
+            com.log_debug("Validating config of service: '--{} / {}--' against its coded definition: \n\n{}\n\n".format(service, srv_camera_id, data[srv_camera_id][service]))
+            for parameters in data[srv_camera_id]:
+                check_config_keys_exist(parameters, data[srv_camera_id][parameters])
+            check_obligatory_keys(data[srv_camera_id], com.SERVICE_DEFINITION[service])
+            check_optional_keys(data[srv_camera_id], com.SERVICE_DEFINITION[service])
     return True
 
 
 def validate_service_exists(data):
-    service_list = com.SERVICE_DEFINITION.keys()
     for camera_service_id in data.keys():
-        if data[camera_service_id]['serviceType'] not in service_list:
-            com.log_error("Configuration error - Requested service: {} - Available services: {}".format(service_parameter, service_list))
+        for service in data[camera_service_id].keys():
+            if service not in com.SERVICE_DEFINITION.keys():
+                com.log_error("Configuration error - Requested service: {} - Does not exist in the service list: {}".format(service, com.SERVICE_DEFINITION.keys()))
     return True
 
 
@@ -81,20 +84,19 @@ def get_config_filtered_by_active_service(config_data):
     if not isinstance(config_data, dict):
         com.log_error("Configuration error - Config data must be a dictionary - type: {} / content: {}".format(type(config_data), config_data))
     active_services = {}
-    for key in config_data.keys():
+
+    for local_server_mac in config_data.keys():
         # This variable will be incremented if the service name key already exists
-        service_consecutive = 0 
-        for inner_key in config_data[key]:
-            if config_data[key][inner_key]['enabled']:
-
-                new_key_name = key + "_" + inner_key + "_" + config_data[key][inner_key]['serviceType'] + "_" + str(service_consecutive)
-                if len(active_services) > 0 and new_key_name in active_services:
-                    service_consecutive += 1
-                    new_key_name = key + "_" + inner_key + "_" + config_data[key][inner_key]['serviceType'] + "_" + str(service_consecutive)
-
-                active_services[new_key_name] = config_data[key][inner_key]
-                com.log_debug("Service type '{}' of Service '{}' enabled value is: {}".
-                    format(config_data[key][inner_key]['serviceType'], inner_key, config_data[key][inner_key]['enabled']))
+        for camera_mac in config_data[local_server_mac]:
+            for service in config_data[local_server_mac][camera_mac]:
+                if 'enabled' in config_data[local_server_mac][camera_mac][service] and config_data[local_server_mac][camera_mac][service]['enabled'] is True:
+                    new_key_name = 'srv_' + local_server_mac + "_camera_" + camera_mac
+                    if len(active_services) == 0:
+                        active_services[new_key_name] = {service: config_data[local_server_mac][camera_mac][service]}
+                    else:
+                        active_services[new_key_name].update({service: config_data[local_server_mac][camera_mac][service]})
+                    com.log_debug("Service type '{}' enabled value is: {}".
+                        format(service, config_data[local_server_mac][camera_mac][service]['enabled']))
 
     if len(active_services) < 1:
         com.log_error("\nConfiguration does not contain any active service for this server: \n\n{}".format(config_data))
