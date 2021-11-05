@@ -130,7 +130,8 @@ genderNet = cv2.dnn.readNet(genderModel, genderProto)
 def get_group_type(camera_service_id):
     global scfg
     try:
-        return scfg[camera_service_id]['serviceType']
+        for service_name in scfg[camera_service_id]:
+            return service_name
     except Exception as e:
         com.log_error('get_group_type() - original exception: {}'.format(str(e)))
 
@@ -145,20 +146,22 @@ def set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name):
     return True
 
 
-def set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name):
+#def set_blacklist_db_outputs_and_inputs(srv_camera_id, camera_service_id, input_output_db_name):
+def set_blacklist_db_outputs_and_inputs(srv_camera_id, input_output_db_name):
     global scfg
-
     search_db_name = com.BLACKLIST_DB_DIRECTORY + '/' + com.BLACKLIST_DB_NAME
-    if 'blacklistDbFile' in scfg[camera_service_id]:
+
+    {'blackList': {'source': 'file:///tmp/amlo.mp4', 'enabled': True}}
+    if 'blacklistDbFile' in scfg[srv_camera_id][srv_camera_id.split('_')[-1]]:
         old_search_db_name = search_db_name
-        search_db_name = com.BLACKLIST_DB_DIRECTORY + '/' + scfg[camera_service_id]['blacklistDbFile']
+        search_db_name = com.BLACKLIST_DB_DIRECTORY + '/' + scfg[srv_camera_id][srv_camera_id.split('_')[-1]]['blacklistDbFile']
         com.log_debug("Changing default blacklist db file from: {} to {}".format(old_search_db_name, search_db_name))
 
     if com.file_exists_and_not_empty(search_db_name):
-        set_output_db_name(camera_service_id, input_output_db_name)
-        set_known_faces_db_name(camera_service_id, search_db_name)
-        encodings, metadata = biblio.read_pickle(get_known_faces_db_name(camera_service_id), False)
-        set_known_faces_db(camera_service_id, encodings, metadata)
+        set_output_db_name(srv_camera_id, input_output_db_name)
+        set_known_faces_db_name(srv_camera_id, search_db_name)
+        encodings, metadata = biblio.read_pickle(get_known_faces_db_name(srv_camera_id), False)
+        set_known_faces_db(srv_camera_id, encodings, metadata)
         return True
 
     com.log_error('Unable to setup blacklist input/output service variables - blacklist seach db "{}" does not exists'.format(search_db_name))
@@ -206,36 +209,40 @@ def set_face_detection_url(camera_service_id):
     face_detection_url.update({camera_service_id: com.SERVER_URI + 'tx/face-detection.endpoint'})
 
 
-def set_action(camera_service_id, service_name):
-    global action
-    service_list = [item for item in com.SERVICE_DEFINITION.keys()]
+#def set_action(srv_camera_id, camera_service_id, service_name):
+#scfg[srv_camera_id][srv_camera_id.split('_')[-1]]['source']
+def set_action(srv_camera_id, service_name):
+    global action, scfg
 
-    if service_name in service_list:
-        input_output_db_name = com.RESULTS_DIRECTORY + '/general_found_faces_db_.dat'
+    if service_name in com.SERVICES:
+        input_output_db_name = com.RESULTS_DIRECTORY + '/general_found_faces_db.dat'
 
-        if 'generalFaceDectDbFile' in scfg[camera_service_id]:
-            com.log_debug("Changing default general db file from: {} to {}".format(input_output_db_name, scfg[camera_service_id]['generalFaceDectDbFile']))
-            input_output_db_name = com.RESULTS_DIRECTORY + '/' + scfg[camera_service_id]['generalFaceDectDbFile']
+        if 'generalFaceDectDbFile' in scfg[srv_camera_id][service_name]:
+            com.log_debug("Changing default general db file from:\n{} to\n{}".format(input_output_db_name, com.RESULTS_DIRECTORY + '/' + scfg[srv_camera_id][service_name]['generalFaceDectDbFile']))
+            input_output_db_name = com.RESULTS_DIRECTORY + '/' + scfg[srv_camera_id][service_name]['generalFaceDectDbFile']
 
-        action.update({camera_service_id: service_name})
+        action.update({srv_camera_id: service_name})
 
-        if action[camera_service_id] == service_list[0]:
-            com.log_debug('set find variables for service id: {}'.format(camera_service_id))
-        elif com.BLACKLIST_DB_NAME and action[camera_service_id] == service_list[1]:
-            com.log_debug('set "blackList" variables for service id: {}'.format(camera_service_id))
-            set_blacklist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
-        elif com.WHITELIST_DB_NAME and action[camera_service_id] == service_list[2]:
-            com.log_debug('set "whiteList" variables for service id: {}'.format(camera_service_id))
-            set_whitelist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
-        elif action[camera_service_id] == service_list[3]:
-            com.log_debug('set "recurrence" variables for service id: {}'.format(camera_service_id))
-            set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name)
-        elif action[camera_service_id] == service_list[4]:
-            com.log_debug('set "whiteList" variables for service id: {}'.format(camera_service_id))
+        if service_name == com.SERVICE_DEFINITION[com.SERVICES['find']]:
+            com.log_debug('Set "find" variables for service id: {}'.format(srv_camera_id))
+        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['blackList']] and com.BLACKLIST_DB_NAME:
+            com.log_debug('Set "blackList" variables for service id: {}'.format(srv_camera_id))
+            #set_blacklist_db_outputs_and_inputs(srv_camera_id, camera_service_id, input_output_db_name)
+            set_blacklist_db_outputs_and_inputs(srv_camera_id, input_output_db_name)
+        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['whiteList']] and com.WHITELIST_DB_NAME:
+            com.log_debug('Set "whiteList" variables for service id: {}'.format(srv_camera_id))
+            #set_whitelist_db_outputs_and_inputs(camera_service_id, input_output_db_name)
+            set_whitelist_db_outputs_and_inputs(srv_camera_id, input_output_db_name)
+        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['recurrence']]:
+            com.log_debug('Set "recurrence" variables for service id: {}'.format(srv_camera_id))
+            #set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name)
+            set_recurrence_outputs_and_inputs(srv_camera_id, input_output_db_name)
+        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['ageAndGender']]:
+            com.log_debug('Set "Age and Gender" variables for service id: {}'.format(srv_camera_id))
 
         return True
 
-    com.log_error('Unable to set up value:{}, must be one of this: {}'.format(value, service_list))
+    com.log_error('Unable to set up value:{}, must be one of this: {}'.format(service_name, com.SERVICES))
 
 
 def set_known_faces_db_name(camera_service_id, value):
@@ -482,7 +489,8 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
     update = False
     best_index = None
 
-    if program_action == com.SERVICE_DEFINITION['recurrence']:
+    #if program_action == com.SERVICE_DEFINITION['recurrence']:
+    if program_action == 'recurrence':
         difference = None
 
         # We assume the delta time is always going to be so big that the id will change even with the same subject
@@ -699,8 +707,9 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
     program_action = get_action(camera_service_id)
     delta = get_delta(camera_service_id)
     default_similarity = get_similarity(camera_service_id)
-
-    if program_action == com.SERVICE_DEFINITION['find']:
+    
+    '''
+    if program_action == com.SERVICE_DEFINITION[camera_service_id]['find']:
         # TODO
         #
         # json talk to the dashboard to check current data 
@@ -717,6 +726,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
         # store somehow the subject version locally
         #
         donothin = 'till we get the described logic'
+    '''
 
     known_face_metadata, known_face_encodings = get_known_faces_db(camera_service_id)
     tracking_absence_dict = get_tracking_absence_dict(camera_service_id)
@@ -920,16 +930,37 @@ def main(args):
         com.log_debug("Frames will be saved in '{}'".format(folder_name))
         com.create_data_dir(folder_name)
 
-    number_sources = len(scfg)
+    number_sources = 0
+    for srv_camera_id in scfg:
+        number_sources = number_sources + len(scfg[srv_camera_id])
     is_live = False
     com.log_debug("Final configuration: {}".format(scfg))
 
-    for camera_service_id  in scfg:
-        call_order_of_keys.append(camera_service_id)
-        set_action(camera_service_id, scfg[camera_service_id]['serviceType'])
-        fps_streams[camera_service_id] = GETFPS(camera_service_id)
-        if is_live is False and scfg[camera_service_id]['source'].find("rtsp://") == 0:
+    '''
+    print('order of keys', call_order_of_keys)
+    print('\n\n',scfg, '\n\n')
+    for srv_camera_id  in scfg:
+        print('id....',srv_camera_id, scfg[srv_camera_id], srv_camera_id.split('_')[-1], ' ... ', scfg[srv_camera_id][srv_camera_id.split('_')[-1]]['source'])
+    quit()
+    '''
+    for srv_camera_id  in scfg:
+        #print('id....',srv_camera_id, scfg[srv_camera_id], srv_camera_id.split('_')[-1])
+        #for service in scfg[srv_camera_id]:
+
+        # Set the Service id named=camera_service_id constructed with the service mac address + the camera mac address + service name
+        # These are the indexes of different levels of the config dictionary gotten by the dashboard and the they are Unique 
+        #camera_service_id = srv_camera_id + '_' + service
+
+        call_order_of_keys.append(srv_camera_id)
+        #set_action(srv_camera_id, camera_service_id, service)
+        service_name = srv_camera_id.split('_')[-1]
+        set_action(srv_camera_id, service_name)
+        fps_streams[srv_camera_id] = GETFPS(srv_camera_id)
+
+        # Defining if there is a source within all the service that is a live rtsp
+        if is_live is False and scfg[srv_camera_id][service_name]['source'].find("rtsp://") == 0:
             is_live = True
+
     com.log_debug("Numero de fuentes :{}".format(number_sources))
     print("\n------ Fps_streams: ------n", fps_streams)
 
@@ -952,13 +983,19 @@ def main(args):
         com.log_error(" Unable to create NvStreamMux")
 
     pipeline.add(streammux)
-    #for i in range(number_sources):
     i = 0
+    print(call_order_of_keys)
+    global action
+    print(action)
+    print('scfg',scfg)
     for ordered_key in call_order_of_keys:
         i += 1
         frame_count["stream_"+str(ordered_key)] = 0
         saved_count["stream_"+str(ordered_key)] = 0
-        uri_name = scfg[ordered_key]['source']
+        # Getting the service from the id (is the last element of the key after the last '_')
+        service_name = ordered_key.split('_')[-1]
+
+        uri_name = scfg[ordered_key][service_name]['source']
         com.log_debug("Creating source_bin: {}.- {} with uri_name: {}\n".format(i, ordered_key, uri_name))
         #if uri_name.find("rtsp://") == 0 :
         #    is_live = True
@@ -1020,8 +1057,8 @@ def main(args):
 
     com.log_debug("Creating EGLSink")
     # edgar: cambio esta linea para no desplegar video - 
-    #sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
-    sink = Gst.ElementFactory.make("fakesink", "fakesink")
+    sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
+    #sink = Gst.ElementFactory.make("fakesink", "fakesink")
 
     if not sink:
         com.log_error(" Unable to create egl sink")
@@ -1031,10 +1068,10 @@ def main(args):
         streammux.set_property('live-source', 1)
 
     # Camaras meraki 720p
-    #streammux.set_property('width', 1920)
-    streammux.set_property('width', 1280)
-    #streammux.set_property('height', 1080)
-    streammux.set_property('height', 720)
+    streammux.set_property('width', 1920)
+    #streammux.set_property('width', 1280)
+    streammux.set_property('height', 1080)
+    #streammux.set_property('height', 720)
     streammux.set_property('batch-size', number_sources)
     streammux.set_property('batched-push-timeout', 4000000)
     pgie.set_property('config-file-path',CURRENT_DIR + "/configs/pgie_config_facenet.txt")
@@ -1143,8 +1180,9 @@ def main(args):
 
     # List the sources
     com.log_debug("Now playing...")
-    for dictionary in scfg:
-        com.log_debug("Now playing ... {}".format(scfg[dictionary]['source']))
+    for srv_camera_service_id in scfg:
+        for service_name in scfg[srv_camera_service_id]:
+            com.log_debug("Now playing ... {}".format(scfg[srv_camera_service_id][service_name]['source']))
 
     com.log_debug("Starting pipeline")
     # start play back and listed to events		
