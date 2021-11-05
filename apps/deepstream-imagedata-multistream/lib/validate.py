@@ -3,12 +3,13 @@ import lib.common as com
 
 def check_config_keys_exist(service_name, service_dictionary):
     joint_elements = []
-    for group_of_parameters in com.SERVICE_DEFINITION[service_name]:
-        for defined_service_parameter in com.SERVICE_DEFINITION[service_name][group_of_parameters].keys():
+    for group_of_parameters in com.SERVICE_DEFINITION[com.SERVICES[service_name]][service_name]:
+        for defined_service_parameter in com.SERVICE_DEFINITION[com.SERVICES[service_name]][service_name][group_of_parameters]:
             joint_elements.append(defined_service_parameter)
     for service_parameter in service_dictionary:
         if service_parameter not in joint_elements:
             com.log_error("Configuration error - Pameter: {}, does not exist in the service definition:".format(service_parameter))
+    return True
 
 
 def validate_sources(active_service_configs):
@@ -67,16 +68,16 @@ def check_service_against_definition(data):
             com.log_debug("Validating config of service: '--{} / {}--' against its coded definition: \n\n{}\n\n".format(service, srv_camera_id, data[srv_camera_id][service]))
             for parameters in data[srv_camera_id]:
                 check_config_keys_exist(parameters, data[srv_camera_id][parameters])
-            check_obligatory_keys(data[srv_camera_id], com.SERVICE_DEFINITION[service])
-            check_optional_keys(data[srv_camera_id], com.SERVICE_DEFINITION[service])
+            check_obligatory_keys(data[srv_camera_id], com.SERVICE_DEFINITION[com.SERVICES[service]][service])
+            check_optional_keys(data[srv_camera_id], com.SERVICE_DEFINITION[com.SERVICES[service]][service])
     return True
 
 
 def validate_service_exists(data):
     for camera_service_id in data.keys():
-        for service in data[camera_service_id].keys():
-            if service not in com.SERVICE_DEFINITION.keys():
-                com.log_error("Configuration error - Requested service: {} - Does not exist in the service list: {}".format(service, com.SERVICE_DEFINITION.keys()))
+        for service_name in data[camera_service_id].keys():
+            if service_name not in com.SERVICES:
+                com.log_error("Configuration error - Requested service: {} - Does not exist in the service list: {}".format(service_name, com.SERVICES))
     return True
 
 
@@ -90,13 +91,9 @@ def get_config_filtered_by_active_service(config_data):
         for camera_mac in config_data[local_server_mac]:
             for service in config_data[local_server_mac][camera_mac]:
                 if 'enabled' in config_data[local_server_mac][camera_mac][service] and config_data[local_server_mac][camera_mac][service]['enabled'] is True:
-                    new_key_name = 'srv_' + local_server_mac + "_camera_" + camera_mac
-                    if len(active_services) == 0:
-                        active_services[new_key_name] = {service: config_data[local_server_mac][camera_mac][service]}
-                    else:
-                        active_services[new_key_name].update({service: config_data[local_server_mac][camera_mac][service]})
-                    com.log_debug("Service type '{}' enabled value is: {}".
-                        format(service, config_data[local_server_mac][camera_mac][service]['enabled']))
+                    # Create new key only for the active service
+                    new_key_name = 'srv_' + local_server_mac + "_camera_" + camera_mac + '_' + service
+                    active_services[new_key_name] = {service: config_data[local_server_mac][camera_mac][service]}
 
     if len(active_services) < 1:
         com.log_error("\nConfiguration does not contain any active service for this server: \n\n{}".format(config_data))
