@@ -12,12 +12,12 @@ from os import walk
 global source_type
 
 SOURCE_PATTERNS = ('file:///', 'rtsp://')
-
-SERVICE_DEFINITION = {
+SERVICE_DEFINITION = [
+        {
         "find": {
-            'obligaroty': {
+            "obligaroty": {
                 'enabled':      'bool',
-                'source':       'str',
+                'source':       'str'
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
@@ -28,11 +28,13 @@ SERVICE_DEFINITION = {
                 'ignorePreviousDb':         'bool',
                 'saveFacesDb':              'bool'
                 }
+            },
         },
+        {
         "blackList": {
             'obligaroty': {
                 'enabled':  'bool',
-                'source':   'str',
+                'source':   'str'
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
@@ -42,11 +44,13 @@ SERVICE_DEFINITION = {
                 'ignorePreviousDb':         'bool',
                 'saveFacesDb':              'bool'
                 }
+            }
         },
+        {
         "whiteList": {
             'obligaroty': {
                 'enabled':  'bool',
-                'source':   'str',
+                'source':   'str'
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
@@ -56,32 +60,44 @@ SERVICE_DEFINITION = {
                 'ignorePreviousDb':         'bool',
                 'saveFacesDb':              'bool'
                 }
+            }
         },
+        {
         "recurrence": {
             'obligaroty': {
                 'enabled':  'bool',
-                'source':   'str',
+                'source':   'str'
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
                 'checkBlackList':           'bool',
                 'blacklistDbFile':          'str',
                 'checkWhiteList':           'bool',
-                'whitelistDbFile':          'str',
+                'whitelistDbFile':          'str'
                 }
+            }
         },
+        {
         "ageAndGender": {
             'obligaroty': {
                 'enabled':  'bool',
-                'source':   'str',
+                'source':   'str'
                 },
             'optional': {
                 'generalFaceDectDbFile':    'str',
                 'ignorePreviousDb':         'bool',
                 'saveFacesDb':              'bool'
                 }
+            }
         }
-    }
+    ]
+
+SERVICES = {}
+i = 0
+for item in SERVICE_DEFINITION:
+    for service_name in item:
+        SERVICES.update({service_name: (i)})
+        i += 1
 
 
 def log_error(msg, _quit = True):
