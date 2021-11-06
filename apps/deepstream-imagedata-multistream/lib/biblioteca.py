@@ -11,6 +11,9 @@ import lib.common as com
 import lib.validate as validate
 from datetime import datetime, timedelta
 
+from random import randrange
+import random
+
 global header
 
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -75,7 +78,8 @@ def get_server_info_from_file(file_path, abort_if_exception = True):
 
 
 def get_server_info(abort_if_exception = True, quit_program = True):
-    scfg = get_server_info_from_server(abort_if_exception, quit_program)
+    #scfg = get_server_info_from_server(abort_if_exception, quit_program)
+    scfg = False
 
     if scfg is False:
         scfg = get_server_info_from_file('configs/Server_Emulatation_configs_from_Excel.py', abort_if_exception)
@@ -182,7 +186,8 @@ def clasify_to_known_and_unknown(frame_image, face_locations, **kwargs):
 
     for face_location, face_encoding in zip(face_locations, face_encodings):
         # check if this face is in our list of known faces.
-        metadata = biblio.lookup_known_face(face_encoding, known_face_encodings, known_face_metadata)
+        #metadata = biblio.lookup_known_face(face_encoding, known_face_encodings, known_face_metadata)
+        metadata = lookup_known_face(face_encoding, known_face_encodings, known_face_metadata)
 
         face_label = None
         # If we found the face, label the face with some useful information.
@@ -197,13 +202,15 @@ def clasify_to_known_and_unknown(frame_image, face_locations, **kwargs):
                 total_visitors += 1
 
                 # Add the new face to our known faces metadata
-                known_face_metadata = biblio.register_new_face_2(known_face_metadata, frame_image, face_location, 'visitor' + str(total_visitors))
+                #known_face_metadata = biblio.register_new_face_2(known_face_metadata, frame_image, face_location, 'visitor' + str(total_visitors))
+                known_face_metadata = register_new_face_2(known_face_metadata, frame_image, face_location, 'visitor' + str(total_visitors))
                 # Add the face encoding to the list of known faces
                 known_face_encodings.append(face_encoding)
 
                 if program_action == actions['read']:
                     cv2.imwrite("/tmp/stream_0/visitor_" + str(total_visitors)+".jpg", frame_image)
                     #biblio.write_to_pickle(known_face_encodings, known_face_metadata, output_file, False)
+                    #write_to_pickle(known_face_encodings, known_face_metadata, output_file, False)
 
         if face_label is not None:
             face_labels.append(face_label)
@@ -250,7 +257,8 @@ def delete_pickle(data_file):
         raise Exception('unable to delete file: %s' % file_name)
 
 
-def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, tolerated_difference = 0.64):
+#def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, tolerated_difference = 0.64):
+def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, image, tolerated_difference = 0.64):
     '''
     - See if this face was already stored in our list of faces
     - tolerated_difference: is the parameter that indicates how much 2 faces are similar, 0 is the best match and 1 means are completly different
@@ -259,6 +267,7 @@ def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, 
     if known_face_encodings:
         # Only check if there is a match
         matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        print('matches .. . . ', matches)
 
         if True in matches:
             # si hay un True en la lista entonces hay un match, get the indexes of these matches
@@ -280,6 +289,18 @@ def lookup_known_face(face_encoding, known_face_encodings, known_face_metadata, 
                 return   known_face_metadata[indexes[best_match_index]], indexes[best_match_index], face_distances[best_match_index]
 
             return None, None, face_distances[best_match_index]
+        '''
+        else:
+            try:
+                # edgar EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+                sss = randrange(999999)
+                rrr = random.randint(0,sss)
+                print('rrrr: ', rrr)
+            except Exception as e:
+                print(str(e))
+                quit()
+            cv2.imwrite('/home/mit-mexico/eee/notFaceRecognition_' + str(rrr) + ".jpg", image)
+        '''
     return None, None, None
 
 
