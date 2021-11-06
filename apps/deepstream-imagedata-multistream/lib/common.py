@@ -124,12 +124,12 @@ def log_warning(msg):
 try:
     USER_SERVER_ENDPOINT = os.environ['USER_SERVER_ENDPOINT']
 except KeyError:
-    log_error('\nUnable to read value of environment variable "USER_SERVER_ENDPOINT"  -- Set the variable in /home/$USER/.bashrc')
+    log_error('\nUnable to read value of environment variable "USER_SERVER_ENDPOINT"  -- Set the variable in $HOME/.bashrc')
 
 try:
     GET_SERVER_CONFIG_URI = os.environ['GET_SERVER_CONFIG_URI']
 except KeyError:
-    log_error('\nUnable to read value of environment variable "GET_SERVER_CONFIG_URI"  -- Set the variable in /home/$USER/.bashrc')
+    log_error('\nUnable to read value of environment variable "GET_SERVER_CONFIG_URI"  -- Set the variable in $HOME/.bashrc')
 
 try:
     RESULTS_DIRECTORY   = os.environ['RESULTS_DIRECTORY']
@@ -140,12 +140,12 @@ except KeyError:
 try:
     INPUT_DB_DIRECTORY  = os.environ['INPUT_DB_DIRECTORY']
 except KeyError:
-    log_error('\nUnable to read value of environment variable "INPUT_DB_DIRECTORY"  -- Set the variable in /home/$USER/.bashrc')
+    log_error('\nUnable to read value of environment variable "INPUT_DB_DIRECTORY"  -- Set the variable in $HOME/.bashrc')
 
 try:
     TMP_RESULTS_DIR     = os.environ['TMP_RESULTS_DIR']
 except KeyError:
-    log_error('\nUnable to read value of environment variable "TMP_RESULTS_DIR"  -- Set the variable in /home/$USER/.bashrc')
+    log_error('\nUnable to read value of environment variable "TMP_RESULTS_DIR"  -- Set the variable in $HOME/.bashrc')
 
 try:
     DELETE_PREVIOUS_TMP_RESULTS = os.environ['DELETE_PREVIOUS_TMP_RESULTS']
