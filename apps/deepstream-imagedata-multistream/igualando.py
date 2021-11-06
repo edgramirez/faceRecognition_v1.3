@@ -78,6 +78,7 @@ GST_CAPS_FEATURES_NVMM="memory:NVMM"
 pgie_classes_str= ["face", "Placa", "Marca","Modelo"]
 
 CURRENT_DIR = os.getcwd()
+DEEPSTREAM_FACE_RECOGNITION_MINIMUM_CONFIDENCE = .71 # 0 cualquir cosa es reconocida como rostro 1 es la maxima confidencia de que ese objeto es un rostro
 
 
 global known_face_encodings
@@ -146,21 +147,23 @@ def set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name):
     return True
 
 
-#def set_blacklist_db_outputs_and_inputs(srv_camera_id, camera_service_id, input_output_db_name):
 def set_blacklist_db_outputs_and_inputs(srv_camera_id, input_output_db_name):
     global scfg
     search_db_name = com.BLACKLIST_DB_DIRECTORY + '/' + com.BLACKLIST_DB_NAME
 
-    {'blackList': {'source': 'file:///tmp/amlo.mp4', 'enabled': True}}
     if 'blacklistDbFile' in scfg[srv_camera_id][srv_camera_id.split('_')[-1]]:
         old_search_db_name = search_db_name
         search_db_name = com.BLACKLIST_DB_DIRECTORY + '/' + scfg[srv_camera_id][srv_camera_id.split('_')[-1]]['blacklistDbFile']
         com.log_debug("Changing default blacklist db file from: {} to {}".format(old_search_db_name, search_db_name))
 
     if com.file_exists_and_not_empty(search_db_name):
+        # guarda el nombre de la base de datos general de todos los rostros detectados
         set_output_db_name(srv_camera_id, input_output_db_name)
+        # guarda el nombre de la base de datos que contiene los rostros a buscar
         set_known_faces_db_name(srv_camera_id, search_db_name)
+        # extrae las codificaciones y metadata de cada una de los rotros almacenados en la base de datos de rostros a buscar
         encodings, metadata = biblio.read_pickle(get_known_faces_db_name(srv_camera_id), False)
+        # saving the endings and metadata en sus dictionarios globales correspondientes
         set_known_faces_db(srv_camera_id, encodings, metadata)
         return True
 
@@ -209,8 +212,6 @@ def set_face_detection_url(camera_service_id):
     face_detection_url.update({camera_service_id: com.SERVER_URI + 'tx/face-detection.endpoint'})
 
 
-#def set_action(srv_camera_id, camera_service_id, service_name):
-#scfg[srv_camera_id][srv_camera_id.split('_')[-1]]['source']
 def set_action(srv_camera_id, service_name):
     global action, scfg
 
@@ -227,7 +228,6 @@ def set_action(srv_camera_id, service_name):
             com.log_debug('Set "find" variables for service id: {}'.format(srv_camera_id))
         elif service_name in com.SERVICE_DEFINITION[com.SERVICES['blackList']] and com.BLACKLIST_DB_NAME:
             com.log_debug('Set "blackList" variables for service id: {}'.format(srv_camera_id))
-            #set_blacklist_db_outputs_and_inputs(srv_camera_id, camera_service_id, input_output_db_name)
             set_blacklist_db_outputs_and_inputs(srv_camera_id, input_output_db_name)
         elif service_name in com.SERVICE_DEFINITION[com.SERVICES['whiteList']] and com.WHITELIST_DB_NAME:
             com.log_debug('Set "whiteList" variables for service id: {}'.format(srv_camera_id))
@@ -246,6 +246,7 @@ def set_action(srv_camera_id, service_name):
 
 
 def set_known_faces_db_name(camera_service_id, value):
+    # TODO instead of using a separated variable to store the input file, store and read this from config scfg global dictionary 
     global input_file
     input_file.update({camera_service_id: value})
 
@@ -256,24 +257,17 @@ def set_output_db_name(camera_service_id, value):
 
 
 def set_known_faces_db(camera_service_id, encodings, metadata):
-    global known_face_encodings, known_face_metadata
-
-    #known_face_encodings = encodings
     set_encoding(camera_service_id, encodings)
-    #known_face_metadata = metadata
     set_metadata(camera_service_id, metadata)
 
 
 def set_metadata(camera_service_id, metadata):
     global known_face_metadata
-
-    #known_face_metadata = metadata
     known_face_metadata.update({camera_service_id: metadata})
 
 
 def set_encoding(camera_service_id, encodings):
     global known_face_metadata
-    #known_face_encodings = encodings
     known_face_encodings.update({camera_service_id: encodings})
 
 
@@ -318,6 +312,7 @@ def get_action(camera_service_id):
 
 
 def get_output_db_name(camera_service_id):
+    # TODO instead of use a serparated variable to store diferent paths use the scfg config dictionary
     global output_file
 
     if camera_service_id in output_file:
@@ -372,7 +367,7 @@ def get_camera_service_id(camera_service_id):
 
 
 def get_delta(camera_service_id):
-    return 120
+    return 10
 
 
 def get_similarity(camera_service_id):
@@ -538,19 +533,22 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
             get_gender_and_age(image)
             return True
 
-    else: # ---- FIND FACES ----
+    else: # ---- FIND FACES ---- # ---- FIND FACES ----# ---- FIND FACES ----# ---- FIND FACES ----# ---- FIND FACES ----# ---- FIND FACES ----
         not_applicable_id = get_not_applicable_id(camera_service_id, abort = False)
 
         if obj_id not in known_faces_indexes:
             if obj_id in not_applicable_id: 
                 return False
 
+            # codificando la imagen obtenida desde el streaming 
             img_encoding, img_metadata = biblio.encode_face_image(image, name, camera_service_id, confidence, False)
 
+            # si el modelo de "face recognition" puede generar una codificacion de la imagen su valor es diferente de None
             if img_encoding is None:
                 return  False
 
-            metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata)
+            # comparamos el rostro codificado que se obtuvo del streaming contra la BD de rostros a buscar
+            metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata, image)
 
             # verificar si hubo coincidencia con alguno de los rostros buscados
             current_group_type = get_group_type(camera_service_id)
@@ -558,19 +556,23 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
                 update_not_applicable_id(camera_service_id, obj_id)
                 if current_group_type == 'whiteList':
                     print('Rostro con id: {}, no esta en la White list. Reportando incidente......'.format(obj_id))
-                    cv2.imwrite('/tmp/found_elements/notInWhiteList_' + str(obj_id) + ".jpg", image)
+                    #cv2.imwrite('/tmp/found_elements/notInWhiteList_' + str(obj_id) + ".jpg", image)
+                    cv2.imwrite(com.RESULTS_DIRECTORY + '/notInWhiteList_' + str(obj_id) + ".jpg", image)
                 else:
                     print('Rostro con id: {}, no esta en la Black list, todo OK.....'.format(obj_id))
-                    cv2.imwrite('/tmp/found_elements/notInBlackList_' + str(obj_id) + ".jpg", image)
+                    #cv2.imwrite('/tmp/found_elements/notInBlackList_' + str(obj_id) + ".jpg", image)
+                    cv2.imwrite(com.RESULTS_DIRECTORY + '/notInBlackList_' + str(obj_id) + ".jpg", image)
 
                 return False
 
             if current_group_type == 'blackList':
                 print('Rostro con id: {} coincide con elemento {} en la Black list'.format(obj_id, metadata['name']))
-                cv2.imwrite('/tmp/found_elements/BlackListMatch_' + str(obj_id) + ".jpg", image)
+                #cv2.imwrite('/tmp/found_elements/BlackListMatch_' + str(obj_id) + ".jpg", image)
+                cv2.imwrite(com.RESULTS_DIRECTORY + '/BlackListMatch_' + str(obj_id) + ".jpg", image)
             else:
                 print('Rostro con id: {} coincide con elemento {} en la White list'.format(obj_id, metadata['name']))
-                cv2.imwrite('/tmp/found_elements/WhiteListMatch_' + str(obj_id) + ".jpg", image)
+                #cv2.imwrite('/tmp/found_elements/WhiteListMatch_' + str(obj_id) + ".jpg", image)
+                cv2.imwrite(com.RESULTS_DIRECTORY + '/WhiteListMatch_' + str(obj_id) + ".jpg", image)
 
 
             # verificar si ya se encuentra detectado bajo otro id y entonces solo actualiza
@@ -745,7 +747,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
 
         fake_frame_number += 1
         frame_number = frame_meta.frame_num
-        l_obj=frame_meta.obj_meta_list
+        l_obj = frame_meta.obj_meta_list
         num_rects = frame_meta.num_obj_meta
         is_first_obj = True
        
@@ -769,7 +771,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
             # If such detections are found, annoate the frame with bboxes and confidence value.
 
             # Save the annotated frame to file.
-            if obj_meta.class_id == 0 and obj_meta.confidence > 0.81:
+            if obj_meta.class_id == 0 and obj_meta.confidence > DEEPSTREAM_FACE_RECOGNITION_MINIMUM_CONFIDENCE:
                 # Getting Image data using nvbufsurface
                 # the input should be address of buffer and batch_id
                 n_frame = pyds.get_nvds_buf_surface(hash(gst_buffer), frame_meta.batch_id)
@@ -793,7 +795,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
         saved_count["stream_"+str(call_order_of_keys[frame_meta.pad_index])] += 1
 
         try:
-            l_frame=l_frame.next
+            l_frame = l_frame.next
         except StopIteration:
             break
 
@@ -806,7 +808,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
                     tracking_absence_dict[item] += 1
 
     if save_image:
-        if program_action == com.SERVICE_DEFINITION['recurrence']:
+        if program_action in com.SERVICE_DEFINITION[com.SERVICES['recurrence']].keys():
             write_to_db(known_face_metadata, known_face_encodings, get_output_db_name(camera_service_id))
         else:
             target_metadata = get_found_faces(camera_service_id)
@@ -944,20 +946,15 @@ def main(args):
     quit()
     '''
     for srv_camera_id  in scfg:
-        #print('id....',srv_camera_id, scfg[srv_camera_id], srv_camera_id.split('_')[-1])
-        #for service in scfg[srv_camera_id]:
-
-        # Set the Service id named=camera_service_id constructed with the service mac address + the camera mac address + service name
-        # These are the indexes of different levels of the config dictionary gotten by the dashboard and the they are Unique 
-        #camera_service_id = srv_camera_id + '_' + service
-
         call_order_of_keys.append(srv_camera_id)
-        #set_action(srv_camera_id, camera_service_id, service)
         service_name = srv_camera_id.split('_')[-1]
+
+        # Tranfering the configuraion values to global variables
         set_action(srv_camera_id, service_name)
+
         fps_streams[srv_camera_id] = GETFPS(srv_camera_id)
 
-        # Defining if there is a source within all the service that is a live rtsp
+        # Defining if there is a source within all the service that is a live source = rtsp
         if is_live is False and scfg[srv_camera_id][service_name]['source'].find("rtsp://") == 0:
             is_live = True
 
@@ -985,9 +982,6 @@ def main(args):
     pipeline.add(streammux)
     i = 0
     print(call_order_of_keys)
-    global action
-    print(action)
-    print('scfg',scfg)
     for ordered_key in call_order_of_keys:
         i += 1
         frame_count["stream_"+str(ordered_key)] = 0
