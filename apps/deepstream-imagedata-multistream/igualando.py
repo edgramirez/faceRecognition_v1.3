@@ -48,6 +48,10 @@ import lib.validate as validate
 import face_recognition
 from datetime import datetime, timedelta
 
+from random import randrange
+import random
+
+
 
 fps_streams = {}
 frame_count = {}
@@ -62,23 +66,28 @@ PGIE_CLASS_ID_MAKE=2
 
 MAX_DISPLAY_LEN=64
 PGIE_CLASS_ID_FACE = 0
-PGIE_CLASS_ID_PLATE = 1
-PGIE_CLASS_ID_MAKE = 2
-PGIE_CLASS_ID_MODEL = 3
-#MUXER_OUTPUT_WIDTH=1920
-MUXER_OUTPUT_WIDTH=1280
-#MUXER_OUTPUT_HEIGHT=1080
-MUXER_OUTPUT_HEIGHT=720
+
+# 6-Nov-2021
+# Variables no para necesarias para este modelo
+#
+#PGIE_CLASS_ID_PLATE = 1
+#PGIE_CLASS_ID_MAKE = 2
+#PGIE_CLASS_ID_MODEL = 3
+
+MUXER_OUTPUT_WIDTH=1920
+MUXER_OUTPUT_HEIGHT=1080
 MUXER_BATCH_TIMEOUT_USEC=4000000
-#TILED_OUTPUT_WIDTH=1920
-TILED_OUTPUT_WIDTH=1280
-#TILED_OUTPUT_HEIGHT=1080
-TILED_OUTPUT_HEIGHT=720
+TILED_OUTPUT_WIDTH=1920
+TILED_OUTPUT_HEIGHT=1080
 GST_CAPS_FEATURES_NVMM="memory:NVMM"
-pgie_classes_str= ["face", "Placa", "Marca","Modelo"]
+
+# 6-nov-2021
+# Arreglo no utilizado en este modelo
+#pgie_classes_str= ["face", "Placa", "Marca","Modelo"]
 
 CURRENT_DIR = os.getcwd()
-DEEPSTREAM_FACE_RECOGNITION_MINIMUM_CONFIDENCE = .71 # 0 cualquir cosa es reconocida como rostro 1 es la maxima confidencia de que ese objeto es un rostro
+DEEPSTREAM_FACE_RECOGNITION_MINIMUM_CONFIDENCE = .86 # 0 cualquir cosa es reconocida como rostro, 1 es la maxima confidencia de que ese objeto es un rostro
+FRAME_SIZE = 1024*50                          # bytes
 
 
 global known_face_encodings
@@ -484,8 +493,7 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
     update = False
     best_index = None
 
-    #if program_action == com.SERVICE_DEFINITION['recurrence']:
-    if program_action == 'recurrence':
+    if program_action in com.SERVICE_DEFINITION[com.SERVICES['recurrence']]:
         difference = None
 
         # We assume the delta time is always going to be so big that the id will change even with the same subject
@@ -548,7 +556,8 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
                 return  False
 
             # comparamos el rostro codificado que se obtuvo del streaming contra la BD de rostros a buscar
-            metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata, image)
+            #metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata, image)
+            metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata)
 
             # verificar si hubo coincidencia con alguno de los rostros buscados
             current_group_type = get_group_type(camera_service_id)
@@ -752,11 +761,15 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
         is_first_obj = True
        
         obj_counter = {
-        PGIE_CLASS_ID_FACE:0,
-        PGIE_CLASS_ID_PLATE:0,
-        PGIE_CLASS_ID_MAKE:0,
-        PGIE_CLASS_ID_MODEL:0
+        PGIE_CLASS_ID_FACE:0
         }
+
+        #6-Nov-2021
+        # Se sacan variables no utilizadas para este modelo
+        #PGIE_CLASS_ID_PLATE:0,
+        #PGIE_CLASS_ID_MAKE:0,
+        #PGIE_CLASS_ID_MODEL:0
+
 
         contador = 0
         while l_obj is not None:
@@ -776,11 +789,21 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
                 # the input should be address of buffer and batch_id
                 n_frame = pyds.get_nvds_buf_surface(hash(gst_buffer), frame_meta.batch_id)
                 frame_image = crop_and_get_faces_locations(n_frame, obj_meta, obj_meta.confidence)
+                
+                # El tamaño del frame mayor que 0 evita recuadros de rostros vacios
+                # se se aumenta el tamaño se estará selecionando frames mas grandes y visibles
 
-                if frame_image.size > 0:
+                if frame_image.size > FRAME_SIZE: 
                     name = None
                     id_set.add(obj_meta.object_id)
                     known_faces_indexes = get_known_faces_indexes(camera_service_id)
+                    #print("Confidencce =", obj_meta.confidence, "Object ID =",obj_meta.object_id,"Face_count=",obj_counter[PGIE_CLASS_ID_FACE],"Frame size ", frame_image.size)
+
+                    '''
+                    sss = randrange(999999)
+                    rrr = random.randint(0,sss)
+                    cv2.imwrite('/home/mit-mexico/eee/notFaceRecognition_' + str(rrr) + ".jpg", frame_image)
+                    '''
                     if classify_to_known_and_unknown(camera_service_id, frame_image, obj_meta.object_id, name, program_action, obj_meta.confidence, fake_frame_number, delta, default_similarity, known_faces_indexes, known_face_metadata, known_face_encodings):
                         save_image = True
                         #cv2.imwrite('/tmp/found_elements/found_multiple_' + str(fake_frame_number) + ".jpg", frame_image)
@@ -789,7 +812,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
             except StopIteration:
                 break
 
-        #print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Face_count=",obj_counter[PGIE_CLASS_ID_FACE],"Person_count=",obj_counter[PGIE_CLASS_ID_PERSON])
+        #print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Face_count=",obj_counter[PGIE_CLASS_ID_FACE])
         # Get frame rate through this probe
         fps_streams[camera_service_id].get_fps()
         saved_count["stream_"+str(call_order_of_keys[frame_meta.pad_index])] += 1
@@ -917,20 +940,34 @@ def create_source_bin(index, uri):
 def main(args):
     global scfg
     scfg = biblio.get_server_info()
+
+    # 6-nov-2021
+    # TMP_RESULTS_DIR
+    # Si se requiere guardar imagenes de lo capturado, se habilita manualmente este directorio
+    # por el momento se desabilita
+    # checar funcion com.delete_tree, el segundo parametro no entiendo que hace
+    '''
     folder_name = com.TMP_RESULTS_DIR
 
+    #print(folder_name)
+    
     if path.exists(folder_name):
         if com.DELETE_PREVIOUS_TMP_RESULTS:
             com.log_debug('Automatically deleting the previous Tmp directory at: {}'.format(folder_name))
-            com.delete_tree(folder_name, '/tmp')
+            #com.delete_tree(folder_name, '/tmp')
+            com.delete_tree(folder_name,folder_name)
         else:
             com.log_debug("To automatically delete the Tmp folder, setup the environment variable like this: export DELETE_PREVIOUS_TMP_RESULTS=True")
             com.log_error("The output folder %s already exists. Please remove it first." % folder_name)
             sys.exit(1)
     else:
+        #print(folder_name)
         os.mkdir(folder_name)
         com.log_debug("Frames will be saved in '{}'".format(folder_name))
         com.create_data_dir(folder_name)
+
+    '''
+    # Fin de la desabilitacion TMP_RESULTS_DIR 
 
     number_sources = 0
     for srv_camera_id in scfg:
@@ -1050,7 +1087,12 @@ def main(args):
             com.log_error(" Unable to create transform")
 
     com.log_debug("Creating EGLSink")
+
     # edgar: cambio esta linea para no desplegar video - 
+    # 6-nov-2021
+    # Reprogramar para que el elemento sink tome el valor de nvegldessink ( video output ) o de fakesink (Black hole for data)
+    # dependiendo si estamos en modo DEMO o produccion respectivamente
+
     sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
     #sink = Gst.ElementFactory.make("fakesink", "fakesink")
 
@@ -1062,12 +1104,16 @@ def main(args):
         streammux.set_property('live-source', 1)
 
     # Camaras meraki 720p
-    streammux.set_property('width', 1920)
-    #streammux.set_property('width', 1280)
-    streammux.set_property('height', 1080)
-    #streammux.set_property('height', 720)
+    # 6-Nov-2021
+    # se definen las variables width y height con valores definidos al inicio
+
+    streammux.set_property('width', MUXER_OUTPUT_WIDTH)
+    streammux.set_property('height', MUXER_OUTPUT_HEIGHT)
     streammux.set_property('batch-size', number_sources)
-    streammux.set_property('batched-push-timeout', 4000000)
+    streammux.set_property('batched-push-timeout', MUXER_BATCH_TIMEOUT_USEC)
+
+    #fin de la definicion
+
     pgie.set_property('config-file-path',CURRENT_DIR + "/configs/pgie_config_facenet.txt")
     pgie_batch_size=pgie.get_property("batch-size")
     if(pgie_batch_size != number_sources):
@@ -1109,6 +1155,10 @@ def main(args):
     tiler.set_property("columns",tiler_columns)
     tiler.set_property("width", TILED_OUTPUT_WIDTH)
     tiler.set_property("height", TILED_OUTPUT_HEIGHT)
+
+
+    #tiler.set_property("rows",1)
+    #tiler.set_property("columns",1)
 
     sink.set_property("sync", 0)
 
