@@ -181,6 +181,8 @@ def create_data_dir(path_str):
 
 def delete_tree(path_str, match_pattern = None):
     if dir_exists(path_str):
+        #print(path_str,"   ", match_pattern)
+        #print(path_str[0:len(match_pattern)])
         # Before deleting check if the path match the pattern
         if match_pattern is not None and path_str[0:len(match_pattern)] != match_pattern:
             log_error("Unable to delete the requested directory: {}, match pattern requests that the path must start with: {}".format(path_str, match_pattern))
