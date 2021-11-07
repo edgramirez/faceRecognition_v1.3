@@ -163,6 +163,11 @@ try:
 except KeyError:
     log_warning('\nEnvironment variable "WHITELIST_DB_NAME" not set')
 
+try:
+    FACE_RECOGNITION_DEMO = os.environ['FACE_RECOGNITION_DEMO']
+except KeyError:
+    log_warning('\nEnvironment variable "FACE_RECOGNITION_DEMO" not set')
+
 
 BLACKLIST_DB_DIRECTORY = INPUT_DB_DIRECTORY + '/blacklist_db'
 WHITELIST_DB_DIRECTORY = INPUT_DB_DIRECTORY + '/whitelist_db'
