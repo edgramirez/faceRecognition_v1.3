@@ -55,7 +55,11 @@ import random
 
 fps_streams = {}
 frame_count = {}
-saved_count = {}
+# 6-nov-2021
+# Validar este arreglo saved_count para que se utiliza...
+# se elimina para este modelo
+#saved_count = {}
+
 global scfg
 scfg = {}
 call_order_of_keys = []
@@ -87,7 +91,7 @@ GST_CAPS_FEATURES_NVMM="memory:NVMM"
 
 CURRENT_DIR = os.getcwd()
 DEEPSTREAM_FACE_RECOGNITION_MINIMUM_CONFIDENCE = .86 # 0 cualquir cosa es reconocida como rostro, 1 es la maxima confidencia de que ese objeto es un rostro
-FRAME_SIZE = 1024*50                          # bytes
+FRAME_SIZE = 1024*20                                 # bytes, permite elegir solo frames de un tamaño adecuado
 
 
 global known_face_encodings
@@ -372,6 +376,7 @@ def get_found_faces(camera_service_id):
 
 
 def get_camera_service_id(camera_service_id):
+    global call_order_of_keys
     return call_order_of_keys[camera_service_id]
 
 
@@ -392,7 +397,7 @@ def crop_and_get_faces_locations(n_frame, obj_meta, confidence):
     # convert python array into numy array format.
     frame_image = np.array(n_frame, copy=True, order='C')
 
-    # covert the array into cv2 default color format
+    # convert the array into cv2 default color format
     rgb_frame = cv2.cvtColor(frame_image, cv2.COLOR_RGB2BGR)
 
     # draw rectangle and crop the face
@@ -488,66 +493,69 @@ def get_gender_and_age(image):
     print(f'Age: {age[1:-1]} years')
 
 
+def recurrence(camera_service_id, image, obj_id, name, program_action, confidence, frame_number, delta, default_similarity, known_faces_indexes, known_face_metadata, known_face_encodings):
+    difference = None
+
+    # We assume the delta time is always going to be so big that the id will change even with the same subject
+    if obj_id in known_faces_indexes:
+        return False
+
+    # Try to see if deepstream detected image can be face encoded image_encoding is None is not possible
+    img_encoding, img_metadata = biblio.encode_face_image(image, name, camera_service_id, confidence, False)
+
+    # is not in the know_faces_index but did not generate an encoding result
+    if img_encoding is None:
+        return False
+
+    metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata)
+
+    update_known_faces_indexes(camera_service_id, obj_id)
+    # We found a subject that was previously detected
+    if best_index is not None:
+        today_now = datetime.now()
+        if today_now - known_face_metadata[best_index]['last_seen'] > timedelta(seconds=delta):
+            print("ya avistado: ", known_face_metadata[best_index]['name'], known_face_metadata[best_index]['last_seen'], known_face_metadata[best_index]['seen_count'], today_now, timedelta(seconds=delta))
+            known_face_metadata[best_index]['last_seen'] = today_now
+            known_face_metadata[best_index]['seen_count'] += 1
+            set_known_faces_db(camera_service_id, known_face_encodings, known_face_metadata)
+
+            data = {
+                    'faceId': known_face_metadata[best_index]['face_id'],
+                    'faceType': 1,
+                    'cameraID': camera_service_id,
+                    '#lastDate': today_now,
+                    'numberOfDetections': known_face_metadata[best_index]['seen_count'],
+                    'image': image
+                    }
+
+            #background_result = threading.Thread(target=send_json, args=(data, 'POST', get_face_detection_url(),))
+            #background_result.start()
+            return True
+    else:
+        # We found a new element
+        #face_label = 'visitor_' + str(len(known_face_metadata))
+        print('Nuevo elemento detectado visitor_', str(len(known_face_metadata)))
+        #register_new_face_3(camera_service_id, img_encoding, image, face_label, confidence, None, obj_id)
+        register_new_face_3(camera_service_id, img_encoding, image, confidence, None, obj_id)
+
+        get_gender_and_age(image)
+
+        return True
+
+
 def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, program_action, confidence, frame_number, delta, default_similarity, known_faces_indexes, known_face_metadata, known_face_encodings):
     # Using face_detection library, try to encode the image
-    update = False
-    best_index = None
+    # update = False
+    #best_index = None
 
     if program_action in com.SERVICE_DEFINITION[com.SERVICES['recurrence']]:
-        difference = None
-
-        # We assume the delta time is always going to be so big that the id will change even with the same subject
-        if obj_id in known_faces_indexes:
-            return False
-
-        # Try to see if deepstream detected image can be face encoded image_encoding is None is not possible
-        img_encoding, img_metadata = biblio.encode_face_image(image, name, camera_service_id, confidence, False)
-
-        # is not in the know_faces_index but did not generate an encoding result
-        if img_encoding is None:
-            return False
-
-        metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata)
-
-        update_known_faces_indexes(camera_service_id, obj_id)
-        # We found a subject that was previously detected
-        if best_index is not None:
-            today_now = datetime.now()
-            if today_now - known_face_metadata[best_index]['last_seen'] > timedelta(seconds=delta):
-                print("ya avistado: ", known_face_metadata[best_index]['name'], known_face_metadata[best_index]['last_seen'], known_face_metadata[best_index]['seen_count'], today_now, timedelta(seconds=delta))
-                known_face_metadata[best_index]['last_seen'] = today_now
-                known_face_metadata[best_index]['seen_count'] += 1
-                set_known_faces_db(camera_service_id, known_face_encodings, known_face_metadata)
-
-                data = {
-                        'faceId': known_face_metadata[best_index]['face_id'],
-                        'faceType': 1,
-                        'cameraID': camera_service_id,
-                        '#lastDate': today_now,
-                        'numberOfDetections': known_face_metadata[best_index]['seen_count'],
-                        'image': image
-                        }
-
-                #background_result = threading.Thread(target=send_json, args=(data, 'POST', get_face_detection_url(),))
-                #background_result.start()
-                return True
-        else:
-            # We found a new element
-            #face_label = 'visitor_' + str(len(known_face_metadata))
-            print('Nuevo elemento detectado visitor_', str(len(known_face_metadata)))
-            #register_new_face_3(camera_service_id, img_encoding, image, face_label, confidence, None, obj_id)
-            register_new_face_3(camera_service_id, img_encoding, image, confidence, None, obj_id)
-
-            get_gender_and_age(image)
-            return True
-
-    else: # ---- FIND FACES ---- # ---- FIND FACES ----# ---- FIND FACES ----# ---- FIND FACES ----# ---- FIND FACES ----# ---- FIND FACES ----
+       return recurrence(camera_service_id, image, obj_id, name, program_action, confidence, frame_number, delta, default_similarity, known_faces_indexes, known_face_metadata, known_face_encodings)
+    else:
         not_applicable_id = get_not_applicable_id(camera_service_id, abort = False)
+        if obj_id in not_applicable_id:
+            return False
 
         if obj_id not in known_faces_indexes:
-            if obj_id in not_applicable_id: 
-                return False
-
             # codificando la imagen obtenida desde el streaming 
             img_encoding, img_metadata = biblio.encode_face_image(image, name, camera_service_id, confidence, False)
 
@@ -556,11 +564,11 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
                 return  False
 
             # comparamos el rostro codificado que se obtuvo del streaming contra la BD de rostros a buscar
-            #metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata, image)
             metadata, best_index, difference = biblio.lookup_known_face(img_encoding, known_face_encodings, known_face_metadata)
 
-            # verificar si hubo coincidencia con alguno de los rostros buscados
             current_group_type = get_group_type(camera_service_id)
+
+            # verificar si hubo coincidencia con alguno de los rostros buscados
             if best_index is None:
                 update_not_applicable_id(camera_service_id, obj_id)
                 if current_group_type == 'whiteList':
@@ -577,11 +585,11 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
             if current_group_type == 'blackList':
                 print('Rostro con id: {} coincide con elemento {} en la Black list'.format(obj_id, metadata['name']))
                 #cv2.imwrite('/tmp/found_elements/BlackListMatch_' + str(obj_id) + ".jpg", image)
-                cv2.imwrite(com.RESULTS_DIRECTORY + '/BlackListMatch_' + str(obj_id) + ".jpg", image)
+                cv2.imwrite(com.RESULTS_DIRECTORY + '/BlackListMatch_' + str(obj_id) + "_with_" + metadata['name'] + ".jpg", image)
             else:
                 print('Rostro con id: {} coincide con elemento {} en la White list'.format(obj_id, metadata['name']))
                 #cv2.imwrite('/tmp/found_elements/WhiteListMatch_' + str(obj_id) + ".jpg", image)
-                cv2.imwrite(com.RESULTS_DIRECTORY + '/WhiteListMatch_' + str(obj_id) + ".jpg", image)
+                cv2.imwrite(com.RESULTS_DIRECTORY + '/WhiteListMatch_' + str(obj_id) + "_with_" + metadata['name'] + ".jpg", image)
 
 
             # verificar si ya se encuentra detectado bajo otro id y entonces solo actualiza
@@ -790,6 +798,7 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
                 n_frame = pyds.get_nvds_buf_surface(hash(gst_buffer), frame_meta.batch_id)
                 frame_image = crop_and_get_faces_locations(n_frame, obj_meta, obj_meta.confidence)
                 
+                # 6- nov-2021
                 # El tamaño del frame mayor que 0 evita recuadros de rostros vacios
                 # se se aumenta el tamaño se estará selecionando frames mas grandes y visibles
 
@@ -814,8 +823,16 @@ def tiler_src_pad_buffer_probe(pad, info, u_data):
 
         #print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Face_count=",obj_counter[PGIE_CLASS_ID_FACE])
         # Get frame rate through this probe
-        fps_streams[camera_service_id].get_fps()
-        saved_count["stream_"+str(call_order_of_keys[frame_meta.pad_index])] += 1
+
+
+        #fps_streams[camera_service_id].get_fps()
+        #saved_count["stream_"+str(call_order_of_keys[frame_meta.pad_index])] += 1
+        #print ( " Frame meta Pad Index ", frame_meta.pad_index )
+
+        fps_streams["stream{0}".format(frame_meta.pad_index)].get_fps()
+        #saved_count["stream_"+str(frame_meta.pad_index)] += 1
+
+        #print(saved_count["stream_"+str(frame_meta.pad_index)])
 
         try:
             l_frame = l_frame.next
@@ -938,7 +955,7 @@ def create_source_bin(index, uri):
     return nbin
 
 def main(args):
-    global scfg
+    global scfg, call_order_of_keys
     scfg = biblio.get_server_info()
 
     # 6-nov-2021
@@ -983,17 +1000,26 @@ def main(args):
     quit()
     '''
     for srv_camera_id  in scfg:
+        i = len(call_order_of_keys)
         call_order_of_keys.append(srv_camera_id)
         service_name = srv_camera_id.split('_')[-1]
 
         # Tranfering the configuraion values to global variables
         set_action(srv_camera_id, service_name)
 
-        fps_streams[srv_camera_id] = GETFPS(srv_camera_id)
+        #print(" Camara id  ",srv_camera_id)
+        #quit()
+
+        #fps_streams[srv_camera_id] = GETFPS(srv_camera_id)
+        # 6-nov-2021
+        fps_streams["stream{0}".format(i)]=GETFPS(i)
+
+        ######
 
         # Defining if there is a source within all the service that is a live source = rtsp
         if is_live is False and scfg[srv_camera_id][service_name]['source'].find("rtsp://") == 0:
             is_live = True
+
 
     com.log_debug("Numero de fuentes :{}".format(number_sources))
     print("\n------ Fps_streams: ------n", fps_streams)
@@ -1018,24 +1044,39 @@ def main(args):
 
     pipeline.add(streammux)
     i = 0
-    print(call_order_of_keys)
+    #print(" Call order of keys " , call_order_of_keys)
     for ordered_key in call_order_of_keys:
-        i += 1
-        frame_count["stream_"+str(ordered_key)] = 0
-        saved_count["stream_"+str(ordered_key)] = 0
+
+        # 6-nov-2021
+        #i += 1
+        #frame_count["stream_"+str(ordered_key)] = 0
+        #saved_count["stream_"+str(ordered_key)] = 0
+
+        frame_count["stream_"+str(i)] = 0
+        #saved_count["stream_"+str(i)] = 0
+
         # Getting the service from the id (is the last element of the key after the last '_')
         service_name = ordered_key.split('_')[-1]
+        #print("Service Name  ", service_name)
 
         uri_name = scfg[ordered_key][service_name]['source']
+        #print("uri name  ", uri_name )
+
         com.log_debug("Creating source_bin: {}.- {} with uri_name: {}\n".format(i, ordered_key, uri_name))
-        #if uri_name.find("rtsp://") == 0 :
-        #    is_live = True
-        source_bin = create_source_bin(ordered_key, uri_name)
-        #source_bin = create_source_bin(i, uri_name)
+
+        # 6-nov-2021
+        # Posiblemente redundante por que tambien se valida en el for previo de la configuracion
+        if uri_name.find("rtsp://") == 0 :
+            is_live = True
+
+        #source_bin = create_source_bin(ordered_key, uri_name)
+        source_bin = create_source_bin(i, uri_name)
         if not source_bin:
             com.log_error("Unable to create source bin")
         pipeline.add(source_bin)
         padname = "sink_%u" %i
+        #print(" Pad name ", padname)
+
         sinkpad = streammux.get_request_pad(padname)
         if not sinkpad:
             com.log_error("Unable to create sink pad bin")
@@ -1043,6 +1084,7 @@ def main(args):
         if not srcpad:
             com.log_error("Unable to create src pad bin")
         srcpad.link(sinkpad)
+        i += 1
 
     com.log_debug("Creating Pgie")
     pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
@@ -1058,6 +1100,7 @@ def main(args):
     
     # Add nvvidconv1 and filter1 to convert the frames to RGBA
     # which is easier to work with in Python.
+
     com.log_debug("Creating nvvidconv1 ")
     nvvidconv1 = Gst.ElementFactory.make("nvvideoconvert", "convertor1")
     if not nvvidconv1:
@@ -1069,6 +1112,8 @@ def main(args):
         com.log_error(" Unable to get the caps filter1")
     filter1.set_property("caps", caps1)
     com.log_debug("Creating tiler")
+
+
     tiler=Gst.ElementFactory.make("nvmultistreamtiler", "nvtiler")
     if not tiler:
         com.log_error(" Unable to create tiler")
@@ -1093,8 +1138,14 @@ def main(args):
     # Reprogramar para que el elemento sink tome el valor de nvegldessink ( video output ) o de fakesink (Black hole for data)
     # dependiendo si estamos en modo DEMO o produccion respectivamente
 
-    sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
-    #sink = Gst.ElementFactory.make("fakesink", "fakesink")
+    demo_status = com.FACE_RECOGNITION_DEMO
+    #print("Demo Status ",demo_status)
+    if demo_status == "True":
+        sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
+    else:
+        sink = Gst.ElementFactory.make("fakesink", "fakesink")
+
+
 
     if not sink:
         com.log_error(" Unable to create egl sink")
@@ -1190,6 +1241,12 @@ def main(args):
 
     com.log_debug("Linking elements in the Pipeline")
 
+
+    # 6-nov-2021
+    # Revision de elementos del pipeline
+    # el filtro después del tiler no me hace sentido
+
+
     streammux.link(pgie)
     pgie.link(tracker)        # se añade para tracker
     # pgie.link(nvvidconv1)     se modifica
@@ -1203,6 +1260,25 @@ def main(args):
         transform.link(sink)
     else:
         nvosd.link(sink)
+    '''
+
+
+    streammux.link(pgie)
+    pgie.link(tracker)        # se añade para tracker
+    # pgie.link(nvvidconv1)     se modifica
+    tracker.link(nvvidconv1)  # se añade para ligar tracker con los demas elementos
+    nvvidconv1.link(filter1)
+    filter1.link(tiler)
+    #tiler.link(nvvidconv)
+    tiler.link(nvosd)
+    #nvvidconv.link(nvosd)
+    if is_aarch64():
+        nvosd.link(transform)
+        transform.link(sink)
+    else:
+        nvosd.link(sink)
+    '''
+
 
     # create an event loop and feed gstreamer bus mesages to it
     loop = GObject.MainLoop()
