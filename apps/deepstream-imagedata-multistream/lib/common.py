@@ -166,6 +166,7 @@ except KeyError:
 try:
     FACE_RECOGNITION_DEMO = os.environ['FACE_RECOGNITION_DEMO']
 except KeyError:
+    FACE_RECOGNITION_DEMO = False
     log_warning('\nEnvironment variable "FACE_RECOGNITION_DEMO" not set')
 
 
