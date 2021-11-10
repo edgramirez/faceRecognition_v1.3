@@ -97,29 +97,31 @@ FRAME_SIZE = 1024*20                                 # bytes, permite elegir sol
 global known_face_encodings
 global known_face_metadata
 global action
-global known_faces_indexes
+global known_faces_indexes_dictionary
 global not_applicable_id
 global video_initial_time
 global fake_frame_number
-global found_faces
+global found_faces_dictionary
 global tracking_absence_dict
 global output_file
 global input_file
 global face_detection_url
 global image_group_type
+global delta_time
 
 
 image_group_type = {}
 face_detection_url = {}
-known_faces_indexes = []
+known_faces_indexes_dictionary = {}
 not_applicable_id = {}
 known_face_metadata = {}
 known_face_encodings = {}
-found_faces = []
+found_faces_dictionary = {}
 tracking_absence_dict = {}
 output_file = {}
 input_file = {}
 action = {}
+delta_time = {}
 fake_frame_number = 0
 
 
@@ -280,26 +282,32 @@ def set_metadata(camera_service_id, metadata):
 
 
 def set_encoding(camera_service_id, encodings):
-    global known_face_metadata
+    global known_face_encodings
     known_face_encodings.update({camera_service_id: encodings})
 
 
 def set_tracking_absence_dict(camera_service_id, dictionary):
     global tracking_absence_dict
-    tracking_absence_dict = dictionary
+
+    if camera_service_id in tracking_absence_dict:
+        tracking_absence_dict[camera_service_id] = dictionary
+    else:
+        tracking_absence_dict.update({camera_service_id: dictionary})
+
 
 
 def set_known_faces_indexes(camera_service_id, new_list = None):
-    global known_faces_indexes
+    global known_faces_indexes_dictionary
+
     if new_list:
-        known_faces_indexes = new_list
+        known_faces_indexes_dictionary.update({camera_service_id: new_list})
     else:
-        known_faces_indexes = []
+        known_faces_indexes_dictionary.update({camera_service_id: []})
 
 
 def add_faces_encodings(camera_service_id, face_encoding):
     global known_face_encodings
-    #known_face_encodings.append(face_encoding)
+
     if camera_service_id in known_face_encodings:
         known_face_encodings[camera_service_id].append(face_encoding)
     else:
@@ -349,8 +357,11 @@ def get_known_faces_db(camera_service_id):
 
 
 def get_known_faces_indexes(camera_service_id):
-    global known_faces_indexes
-    return known_faces_indexes
+    global known_faces_indexes_dictionary
+
+    if camera_service_id in known_faces_indexes_dictionary:
+        return known_faces_indexes_dictionary[camera_service_id]
+    return []
 
 
 def get_not_applicable_id(camera_service_id, abort = True):
@@ -364,15 +375,23 @@ def get_not_applicable_id(camera_service_id, abort = True):
     else:
         return []
 
-
+# returns a dictionary
 def get_tracking_absence_dict(camera_service_id):
     global tracking_absence_dict
-    return tracking_absence_dict
+
+    if camera_service_id in tracking_absence_dict:
+        return tracking_absence_dict[camera_service_id]
+    else:
+        return {}
 
 
 def get_found_faces(camera_service_id):
-    global found_faces
-    return found_faces
+    #global found_faces
+    global found_faces_dictionary
+    if camera_service_id in found_faces_dictionary:
+        return found_faces_dictionary[camera_service_id]
+    else:
+        return []
 
 
 def get_camera_service_id(camera_service_id):
@@ -380,8 +399,21 @@ def get_camera_service_id(camera_service_id):
     return call_order_of_keys[camera_service_id]
 
 
+def set_delta(camera_service_id, secs):
+    global delta_time
+
+    if not isinstance(secs, int):
+        com.log_error('delta time value must be integer')
+
+    if camera_service_id in delta_time:
+        delta_time[camera_service_id] = secs
+    else:
+        delta_time.update({camera_service_id: secs})
+
+
 def get_delta(camera_service_id):
-    return 10
+    global delta_time
+    return delta_time[camera_service_id]
 
 
 def get_similarity(camera_service_id):
@@ -389,8 +421,9 @@ def get_similarity(camera_service_id):
 
 
 def save_found_faces(camera_service_id, metadata_of_found_faces):
-    global found_faces
-    found_faces = metadata_of_found_faces
+    #global found_faces
+    global found_faces_dictionary
+    found_faces_dictionary.update({camera_service_id: metadata_of_found_faces})
 
 
 def crop_and_get_faces_locations(n_frame, obj_meta, confidence):
@@ -457,6 +490,7 @@ def register_new_face_3(camera_service_id, face_encoding, image, confidence, dif
 
 def update_not_applicable_id(camera_service_id, new_value, best_index = None):
     global not_applicable_id
+
     if best_index is not None:
         not_applicable_id[camera_service_id][best_index] = new_value
     else:
@@ -470,13 +504,20 @@ def update_not_applicable_id(camera_service_id, new_value, best_index = None):
 
 def update_known_faces_indexes(camera_service_id, new_value, best_index = None):
     # TODO edgar referenciar todo con respecto del camera_service_id
-    global known_faces_indexes
+    global known_faces_indexes_dictionary
+
     if best_index is not None:
-        known_faces_indexes[best_index] = new_value
+        print('no hace nada aun....')
     else:
+        if camera_service_id in known_faces_indexes_dictionary:
+            known_faces_indexes_dictionary[camera_service_id].append(new_value)
+        else:
+            known_faces_indexes_dictionary.update({camera_service_id: [new_value]})
+        '''
         # check value was not previously registered in list
-        if new_value not in known_faces_indexes:
-            known_faces_indexes.append(new_value)
+        if new_value not in known_faces_indexes_dictionary[camera_service_id]:
+            known_faces_indexes_dictionary[camera_service_id].append(new_value)
+        '''
 
 
 def get_gender_and_age(image):
@@ -708,7 +749,6 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
             return False
     return False
 
-#def tiler_src_pad_buffer_probe(pad, info, u_data):
 def tiler_sink_pad_buffer_probe(pad, info, u_data):
     global fake_frame_number
     frame_number = 0		# Faltaba del archivo Original deepstream_imagedata_multistream
@@ -995,6 +1035,7 @@ def main(args):
     number_sources = 0
     for srv_camera_id in scfg:
         number_sources = number_sources + len(scfg[srv_camera_id])
+        set_delta(srv_camera_id, 10)
     is_live = False
     com.log_debug("Final configuration: {}".format(scfg))
 
