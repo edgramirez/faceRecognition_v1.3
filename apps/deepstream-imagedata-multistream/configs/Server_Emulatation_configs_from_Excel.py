@@ -33,11 +33,11 @@
                 "saveFacesDb": false 
                 },
             "blackList": {
-                "source": "rtsp://192.168.129.14:9000/live",
+                "source": "file:///tmp/AmloPanaderia.mp4",
                 "enabled": true
                 },
             "ageAndGender": {
-                "source": "file:///tmp/amlo.mp4",
+                "source": "rtsp://192.168.129.14:9000/live",
                 "enabled": false,
                 "generalFaceDectDbFile": "age_and_gender_service3.dat"
                 },
@@ -52,8 +52,8 @@
             },
         "camera14_mac_address": {
             "blackList": {
-                "source": "file:///tmp/amlo.mp4",
-                "enabled": false
+                "source": "file:///tmp/AmloPanaderia.mp4",
+                "enabled": true
                 }
             }
         }
