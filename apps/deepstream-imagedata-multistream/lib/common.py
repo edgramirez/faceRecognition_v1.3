@@ -9,8 +9,6 @@ from pathlib import Path
 from os import walk
 
 
-global source_type
-
 SOURCE_PATTERNS = ('file:///', 'rtsp://')
 SERVICE_DEFINITION = [
         {
