@@ -241,8 +241,8 @@ def set_action(srv_camera_id, service_name):
 
         if service_name == com.SERVICE_DEFINITION[com.SERVICES['find']]:
             com.log_debug('Set "find" variables for service id: {}'.format(srv_camera_id))
-        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['blackList']] and com.BLACKLIST_DB_NAME:
-            com.log_debug('Set "blackList" variables for service id: {}'.format(srv_camera_id))
+        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['video-BlackList']] and com.BLACKLIST_DB_NAME:
+            com.log_debug('Set "video-BlackList" variables for service id: {}'.format(srv_camera_id))
             set_blacklist_db_outputs_and_inputs(srv_camera_id, input_output_db_name)
         elif service_name in com.SERVICE_DEFINITION[com.SERVICES['whiteList']] and com.WHITELIST_DB_NAME:
             com.log_debug('Set "whiteList" variables for service id: {}'.format(srv_camera_id))
@@ -623,7 +623,7 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
 
                 return False
 
-            if current_group_type == 'blackList':
+            if current_group_type == 'video-BlackList':
                 print('Rostro con id: {} coincide con elemento {} en la Black list , streaming {}'.format(obj_id, metadata['name'],pad_index))
                 #cv2.imwrite('/tmp/found_elements/BlackListMatch_' + str(obj_id) + ".jpg", image)
                 cv2.imwrite(com.RESULTS_DIRECTORY + '/BlackListMatch_' + str(obj_id) + "_with_" + metadata['name'] + ".jpg", image)
