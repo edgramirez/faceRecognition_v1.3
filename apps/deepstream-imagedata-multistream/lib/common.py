@@ -35,12 +35,12 @@ SERVICE_DEFINITION = [
                 'source':   'str'
                 },
             'optional': {
+                'ignorePreviousDb':         'bool',
                 'generalFaceDectDbFile':    'str',
+                'saveFacesDb':              'bool',
                 'checkWhiteList':           'bool',
                 'blacklistDbFile':          'str',
-                'whitelistDbFile':          'str',
-                'ignorePreviousDb':         'bool',
-                'saveFacesDb':              'bool'
+                'whitelistDbFile':          'str'
                 }
             }
         },
