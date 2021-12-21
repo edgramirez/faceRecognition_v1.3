@@ -62,7 +62,7 @@ def get_server_info_from_server(abort_if_exception = True, quit_program = True):
                 com.log_debug("No error detected in the response")
             return json.loads(response.text)
         else:
-            return com.log_error("Unable to retrieve the device configuration from the Server. Server response".format(response), quit_program = quit_program)
+            return com.log_error("Unable to retrieve the device configuration from the Server. Server response: {}".format(response.text), quit_program)
 
 
 def get_server_info_from_file(file_path, abort_if_exception = True):
@@ -73,13 +73,12 @@ def get_server_info_from_file(file_path, abort_if_exception = True):
             if isinstance(data, dict):
                 return data
     if abort_if_exception:
-        return com.log_error("Unable to retrieve the device configuration from local file: {}".format(file_path), quit_program = abort_if_exception)
+        return com.log_error("Unable to retrieve the device configuration from local file: {}".format(file_path), abort_if_exception)
     return False
 
 
 def get_server_info(abort_if_exception = True, quit_program = True):
-    #scfg = get_server_info_from_server(abort_if_exception, quit_program)
-    scfg = False
+    scfg = get_server_info_from_server(abort_if_exception, quit_program)
 
     if scfg is False:
         scfg = get_server_info_from_file('configs/Server_Emulatation_configs_from_Excel.py', abort_if_exception)
