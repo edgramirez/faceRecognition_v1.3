@@ -98,7 +98,7 @@ def get_config_filtered_by_active_service(config_data):
                 if config_data[camera_mac][service]['enabled'] == "True":
                     config_data[camera_mac][service]['enabled'] = True
                     # Create new key only for the active service
-                    new_key_name = 'srv_' + "_camera_" + camera_mac + '_' + service
+                    new_key_name = "camera_" + camera_mac + '_' + service
                     active_services[new_key_name] = {service: config_data[camera_mac][service]}
 
     if len(active_services) < 1:
