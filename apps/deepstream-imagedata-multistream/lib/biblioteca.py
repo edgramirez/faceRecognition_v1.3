@@ -39,7 +39,6 @@ def set_header(token_file = None):
     com.log_error('Unable to read token')
 
 
-
 def get_server_info_from_server(abort_if_exception = True, quit_program = True):
     get_srv_info_url = com.GET_SERVER_CONFIG_URI
     for machine_id in com.get_machine_macaddresses():
