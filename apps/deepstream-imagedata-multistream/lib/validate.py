@@ -7,7 +7,7 @@ def check_config_keys_exist(service_name, service_dictionary):
         for defined_service_parameter in com.SERVICE_DEFINITION[com.SERVICES[service_name]][service_name][group_of_parameters]:
             joint_elements.append(defined_service_parameter)
     for service_parameter in service_dictionary:
-        if service_parameter not in joint_elements:
+        if service_parameter != 'camera_mac_address' and  service_parameter not in joint_elements:
             com.log_error("Configuration error - Pameter: {}, does not exist in the service definition:".format(service_parameter))
     return True
 
@@ -100,6 +100,7 @@ def get_config_filtered_by_active_service(config_data):
                     # Create new key only for the active service
                     new_key_name = "camera_" + camera_mac + '_' + service
                     active_services[new_key_name] = {service: config_data[camera_mac][service]}
+                    active_services[new_key_name][service].update({"camera_mac_address": camera_mac})
 
     if len(active_services) < 1:
         com.log_error("\nConfiguration does not contain any active service for this server: \n\n{}".format(config_data))
