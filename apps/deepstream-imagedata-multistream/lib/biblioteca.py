@@ -111,7 +111,7 @@ def send_json(payload, action, url = None, **options):
                 r = requests.put(url, data=data, headers=header)
             else:
                 r = requests.delete(url, data=data, headers=header)
-            com.log_debug('status: ', r.status_code)
+            #com.log_debug('status: {}'.format(r.status_code))
             return r
         except requests.exceptions.ConnectionError as e:
             time.sleep(sleep_time)
