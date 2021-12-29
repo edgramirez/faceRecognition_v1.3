@@ -79,6 +79,7 @@ def get_server_info_from_file(file_path, abort_if_exception = True):
 def get_server_info(abort_if_exception = True, quit_program = True):
     scfg = get_server_info_from_server(abort_if_exception, quit_program)
 
+    scfg = False
     if scfg is False:
         scfg = get_server_info_from_file('configs/Server_Emulatation_configs_from_Excel.py', abort_if_exception)
 
@@ -110,6 +111,7 @@ def send_json(payload, action, url = None, **options):
                 r = requests.put(url, data=data, headers=header)
             else:
                 r = requests.delete(url, data=data, headers=header)
+            com.log_debug('status: ', r.status_code)
             return r
         except requests.exceptions.ConnectionError as e:
             time.sleep(sleep_time)
@@ -190,7 +192,8 @@ def clasify_to_known_and_unknown(frame_image, face_locations, **kwargs):
         # If we found the face, label the face with some useful information.
         if metadata:
             print('uno ya visto')
-            time_at_door = datetime.now() - metadata['first_seen_this_interaction']
+            #time_at_door = datetime.now() - metadata['first_seen_this_interaction']
+            time_at_door = com.get_timestamp() - metadata['first_seen_this_interaction']
             face_label = f"{metadata['name']} {int(time_at_door.total_seconds())}s"
         else:  # If this is a new face, add it to our list of known faces
             if program_action == actions['read']:
@@ -371,13 +374,14 @@ def new_face_metadata(face_image, name = None, camera_id = None, confidence = No
     #if image_group and not image_group in com.IMAGE_GROUPS:
     #    com.log_error("Image type most be one of the followings or None: {}".format(com.IMAGE_GROUPS))
 
+    #today_now = datetime.now()
+    today_now = com.get_timestamp()
+
     if name is None:
-        name = camera_id + '_' + str(com.get_timestamp())
+        name = camera_id + '_' + str(today_now)
     else:
         if print_name:
             print('Saving face: {} in group: {}'.format(name, image_group))
-
-    today_now = datetime.now()
 
     return {
         'name': name,
@@ -461,11 +465,6 @@ def compare_data(data_file, known_faces_data, tolerated_difference_list):
                     print('last {}'.format(video_faces_metadata[best_index]['last_seen']))
                     print('distance: {}'.format(lowest_distances))
 
-    '''
-        if best_index:
-            #print('Face {} detected at {} {} {} {} {}'.format(metadata['name'], video_metadata['first_seen'], video_metadata['first_seen_this_interaction'], video_metadata['last_seen'], video_metadata['seen_count'], video_metadata['seen_frames']))
-            print('Face {} '.format(metadata['name']))
-    '''
 
 def read_video(video_input, data_file, **kwargs):
     video_capture = cv2.VideoCapture(video_input)
@@ -515,7 +514,8 @@ def read_video(video_input, data_file, **kwargs):
                 face_label = None
                 # If we found the face, label the face with some useful information.
                 if metadata:
-                    time_at_door = datetime.now() - metadata['first_seen_this_interaction']
+                    #time_at_door = datetime.now() - metadata['first_seen_this_interaction']
+                    time_at_door = com.get_timestamp() - metadata['first_seen_this_interaction']
                     face_label = f"{metadata['name']} {int(time_at_door.total_seconds())}s"
                 # If this is a brand new face, add it to our list of known faces
                 else:
