@@ -248,84 +248,25 @@ def set_whitelist_url(camera_service_id):
     global urls
 
     if camera_service_id not in urls:
+        com.log_debug("Setting up service endpoint for service is: {}".format(camera_service_id))
         urls.update({camera_service_id: com.USER_SERVER_ENDPOINT + '/api/#api-Stream-Stream_-_White_list'})
 
 
-def set_action(srv_camera_id, service_name):
-    global action, scfg
-
-    if service_name in com.SERVICES:
-        input_output_db_name = com.RESULTS_DIRECTORY + '/general_found_faces_db.dat'
-
-        if 'generalFaceDectDbFile' in scfg[srv_camera_id][service_name]:
-            com.log_debug("Changing default general db file from:\n{} to\n{}".format(input_output_db_name, com.RESULTS_DIRECTORY + '/' + scfg[srv_camera_id][service_name]['generalFaceDectDbFile']))
-            input_output_db_name = com.RESULTS_DIRECTORY + '/' + scfg[srv_camera_id][service_name]['generalFaceDectDbFile']
-
-        action.update({srv_camera_id: service_name})
-
-        if service_name == com.SERVICE_DEFINITION[com.SERVICES['find']]:
-            com.log_debug('Set "find" variables for service id: {}'.format(srv_camera_id))
-        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['video-BlackList']] and com.BLACKLIST_DB_NAME:
-            com.log_debug('Set "video-BlackList" variables for service id: {}'.format(srv_camera_id))
-            set_blacklist_db_outputs_and_inputs(srv_camera_id, input_output_db_name)
-        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['video-WhiteList']] and com.WHITELIST_DB_NAME:
-            com.log_debug('Set "whiteList" variables for service id: {}'.format(srv_camera_id))
-            set_whitelist_url(srv_camera_id)
-            set_whitelist_db_outputs_and_inputs(srv_camera_id, input_output_db_name)
-        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['recurrence']]:
-            com.log_debug('Set "recurrence" variables for service id: {}'.format(srv_camera_id))
-            #set_recurrence_outputs_and_inputs(camera_service_id, input_output_db_name)
-            set_recurrence_outputs_and_inputs(srv_camera_id, input_output_db_name)
-        elif service_name in com.SERVICE_DEFINITION[com.SERVICES['ageAndGender']]:
-            com.log_debug('Set "Age and Gender" variables for service id: {}'.format(srv_camera_id))
-
-        return True
-
-    com.log_error('Unable to set up value:{}, must be one of this: {}'.format(service_name, com.SERVICES))
-
-
-def set_known_faces_db_name(camera_service_id, value):
-    # TODO instead of using a separated variable to store the input file, store and read this from config scfg global dictionary 
-    global input_file
-    input_file.update({camera_service_id: value})
-
-
-def set_output_db_name(camera_service_id, value):
-    global output_file
-    output_file.update({camera_service_id: value})
-
-
-def set_known_faces_db(camera_service_id, encodings, metadata):
-    set_encoding(camera_service_id, encodings)
-    set_metadata(camera_service_id, metadata)
-
-
-def set_metadata(camera_service_id, metadata):
-    global known_face_metadata
-    known_face_metadata.update({camera_service_id: metadata})
-
-
-def set_encoding(camera_service_id, encodings):
-    global known_face_encodings
-    known_face_encodings.update({camera_service_id: encodings})
-
-
-def set_tracking_absence_dict(camera_service_id, dictionary):
-    global tracking_absence_dict
-
-    if camera_service_id in tracking_absence_dict:
-        tracking_absence_dict[camera_service_id] = dictionary
-    else:
-        tracking_absence_dict.update({camera_service_id: dictionary})
-
-
-
-def set_known_faces_indexes(camera_service_id, new_list = None):
-def set_whitelist_url(camera_service_id):
+def set_blacklist_url(camera_service_id):
     global urls
 
     if camera_service_id not in urls:
-        urls.update({camera_service_id: com.USER_SERVER_ENDPOINT + '/api/#api-Stream-Stream_-_White_list'})
+        com.log_debug("Setting up service endpoint for service is: {}".format(camera_service_id))
+        urls.update({camera_service_id: com.USER_SERVER_ENDPOINT + '/api/#api-Stream-Stream_-_Black_list'})
+
+
+def get_service_url(camera_service_id):
+    global urls
+
+    if camera_service_id in urls:
+        return urls[camera_service_id]
+
+    com.log_error("Unable to get the service endpoint url for service id: {} / url list = {}".format(camera_service_id, urls))
 
 
 def set_action(srv_camera_id, service_name):
@@ -344,6 +285,7 @@ def set_action(srv_camera_id, service_name):
             com.log_debug('Set "find" variables for service id: {}'.format(srv_camera_id))
         elif service_name in com.SERVICE_DEFINITION[com.SERVICES['video-BlackList']] and com.BLACKLIST_DB_NAME:
             com.log_debug('Set "video-BlackList" variables for service id: {}'.format(srv_camera_id))
+            set_blacklist_url(srv_camera_id)
             set_blacklist_db_outputs_and_inputs(srv_camera_id, input_output_db_name)
         elif service_name in com.SERVICE_DEFINITION[com.SERVICES['video-WhiteList']] and com.WHITELIST_DB_NAME:
             com.log_debug('Set "whiteList" variables for service id: {}'.format(srv_camera_id))
@@ -372,11 +314,6 @@ def set_output_db_name(camera_service_id, value):
     output_file.update({camera_service_id: value})
 
 
-def set_known_faces_db(camera_service_id, encodings, metadata):
-    set_encoding(camera_service_id, encodings)
-    set_metadata(camera_service_id, metadata)
-
-
 def set_metadata(camera_service_id, metadata):
     global known_face_metadata
     known_face_metadata.update({camera_service_id: metadata})
@@ -385,6 +322,11 @@ def set_metadata(camera_service_id, metadata):
 def set_encoding(camera_service_id, encodings):
     global known_face_encodings
     known_face_encodings.update({camera_service_id: encodings})
+
+
+def set_known_faces_db(camera_service_id, encodings, metadata):
+    set_encoding(camera_service_id, encodings)
+    set_metadata(camera_service_id, metadata)
 
 
 def set_tracking_absence_dict(camera_service_id, dictionary):
@@ -717,35 +659,18 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
                 update_not_applicable_id(camera_service_id, obj_id)
 
                 if current_group_type == 'video-WhiteList':
-                    '''
-                    data = {
-                       “id”=id,                                 # string mac_camara + epoc
-                       "blacklist_match_name" = blacklist_name, # string name from the blacklist
-                       "date" = epoctime,                       # long integer para representar el tiempo del evento
-                       "image_encoding" = img_encoding,         # string encoding from the image that matched ( es un arreglo largo de números )
-                       "img_metadata" = img_metadata,           # metadata from the image that matched
-                    }
-
-                    data = {
-                       "id": id_epoc                            # string
-                       “camera_id”= mac-address,                # string mac_camara + epoc
-                       "blacklist_match_name" = blacklist_name, # string name from the blacklist
-                       "date" = epoctime,                       # long integer para representar el tiempo del evento
-                       "image_encoding" = img_encoding,         # string encoding from the image that matched ( es un arreglo largo de números )
-                       "img_metadata" = img_metadata,           # metadata from the image that matched
-                    }
-                    '''
-                    epoc_time = get_camera_mac_address(camera_service_id)
+                    # we use .tolist() to transform the ndarray to list:  ----  TypeError: Object of type 'ndarray' is not JSON serializable
+                    epoc_time = com.get_timestamp()
+                    #img_encoding_as_list = img_encoding.tolist()
+                    img_encoding_as_list = str(img_encoding)
                     data  = {
                             'id': str(obj_id) + '_' + str(epoc_time),
-                            'camera_id': get_camera_mac_address(camera_service_id),
+                            'camera-id': get_camera_mac_address(camera_service_id),
                             'date': epoc_time,
-                            'image_encoding': img_encoding,
-                            'img_metadata': metadata
+                            'image_encoding': img_encoding_as_list,
+                            'img_metadata': str(metadata)
                             }
-                    print(get_face_detection_url(camera_service_id))
-                    quit()
-                    #send_json(data, 'POST', url)
+                    biblio.send_json(data, 'POST', get_service_url(camera_service_id))
                     print('Rostro con id: {}, streaming {}, no esta en la White list. Reportando incidente'.format(obj_id, pad_index))
                     # Activar solo para visualizar imagen ---- cv2.imwrite(com.RESULTS_DIRECTORY + '/notInWhiteList_' + str(obj_id) + ".jpg", image)
                 else:
@@ -756,10 +681,30 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
 
             # Acciones para cuando hay coincidencia del rostro 
             if current_group_type == 'video-BlackList':
-                print('Rostro con id: {} coincide con elemento {} en la Black list , streaming {}'.format(obj_id, metadata['name'],pad_index))
+                # we use .tolist() to transform the ndarray to list:  ----  TypeError: Object of type 'ndarray' is not JSON serializable
+                epoc_time = com.get_timestamp()
+                #img_encoding_as_list = img_encoding.tolist()
+                #img_encoding_as_list = img_encoding.tolist()
+                #json_metadata = metadata
+                #print(json_metadata.keys())
+                #print(type(json_metadata))
+                #quit()
+                data  = {
+                    'id': str(obj_id) + '_' + str(epoc_time),
+                    'camera-id': get_camera_mac_address(camera_service_id),
+                    'date': epoc_time,
+                    'blacklist_match_name': metadata['name'],
+                    'image_encoding': str(img_encoding),
+                    'img_metadata': str(metadata)
+                    }
+                print('data and epoc_time:\n')
+                print(data)
+                print(epoc_time)
+                biblio.send_json(data, 'POST', get_service_url(camera_service_id))
+                print('Rostro con id: {} coincide con elemento {} en la Black list , streaming {}'.format(obj_id, metadata['name'], pad_index))
                 # Activar solo para visualizar imagen ---- cv2.imwrite(com.RESULTS_DIRECTORY + '/BlackListMatch_' + str(obj_id) + "_with_" + metadata['name'] + ".jpg", image)
             else:
-                print('Rostro con id: {} coincide con elemento {} en la White list , streaming {}'.format(obj_id, metadata['name'], pad_index))
+                print('Rostro con id: {} coincide con elemento {} en la White list, streaming {}, todo Ok nada que reportar'.format(obj_id, metadata['name'], pad_index))
                 # Activar solo para visualizar imagen ---- cv2.imwrite(com.RESULTS_DIRECTORY + '/WhiteListMatch_' + str(obj_id) + "_with_" + metadata['name'] + ".jpg", image)
 
             # obtine la estructura y datos actuales de los rostros encontrados 
@@ -1216,8 +1161,6 @@ def main(args):
     else:
         sink = Gst.ElementFactory.make("fakesink", "fakesink")
 
-
-
     if not sink:
         com.log_error(" Unable to create egl sink")
 
@@ -1270,7 +1213,6 @@ def main(args):
             tracker_enable_batch_process = config.getint('tracker', key)
             tracker.set_property('enable_batch_process', tracker_enable_batch_process)
 
-
     tiler_rows=int(math.sqrt(number_sources))
     tiler_columns=int(math.ceil((1.0*number_sources)/tiler_rows))
     tiler.set_property("rows",tiler_rows)
@@ -1278,10 +1220,8 @@ def main(args):
     tiler.set_property("width", TILED_OUTPUT_WIDTH)
     tiler.set_property("height", TILED_OUTPUT_HEIGHT)
 
-
     sink.set_property("sync", 0)                    # Sync on the clock 
     sink.set_property("qos", 0)                     # faltaba del archivo original deepstream_imagedata_multistream.py  Generate Quality-of-Service events upstream
-
 
     if not is_aarch64():
         # Use CUDA unified memory in the pipeline so frames
@@ -1312,13 +1252,11 @@ def main(args):
 
     com.log_debug("Linking elements in the Pipeline")
 
-
     # 6-nov-2021
     # Revision de elementos del pipeline
     # el filtro después del tiler no me hace sentido
     # por el momento se queda como el archivo original deepstream_imagedata_multistream.py
 
-    
     streammux.link(pgie)
     pgie.link(tracker)        # se añade para tracker
     # pgie.link(nvvidconv1)     se modifica
