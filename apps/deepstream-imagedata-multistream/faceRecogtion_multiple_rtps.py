@@ -697,9 +697,6 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
                     'image_encoding': str(img_encoding),
                     'img_metadata': str(metadata)
                     }
-                print('data and epoc_time:\n')
-                print(data)
-                print(epoc_time)
                 biblio.send_json(data, 'POST', get_service_url(camera_service_id))
                 print('Rostro con id: {} coincide con elemento {} en la Black list , streaming {}'.format(obj_id, metadata['name'], pad_index))
                 # Activar solo para visualizar imagen ---- cv2.imwrite(com.RESULTS_DIRECTORY + '/BlackListMatch_' + str(obj_id) + "_with_" + metadata['name'] + ".jpg", image)
