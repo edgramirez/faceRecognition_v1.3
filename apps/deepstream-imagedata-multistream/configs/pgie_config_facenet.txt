@@ -62,13 +62,13 @@ gpu-id=0
 net-scale-factor=0.0039215697906911373
 
 #labelfile-path=/opt/nvidia/deepstream/deepstream-5.0/sources/apps/redaction_with_deepstream/fd_lpd_model/labels.txt
-labelfile-path=/home/mit-mexico/github/faceRecognition_v1.3/apps/deepstream-imagedata-multistream/configs/labels.txt
+labelfile-path=/home/aaeon/github/faceRecognition_v1.3/apps/deepstream-imagedata-multistream/configs/labels.txt
 
 
 # Modelo solo clase con model.etlt
 tlt-model-key=nvidia_tlt
 #tlt-encoded-model=/opt/nvidia/deepstream/deepstream/samples/models/tlt_pretrained_models/facedetect/model.etlt
-tlt-encoded-model=/home/mit-mexico/github/faceRecognition_v1.3/apps/deepstream-imagedata-multistream/configs/model.etlt
+tlt-encoded-model=/home/aaeon/github/faceRecognition_v1.3/apps/deepstream-imagedata-multistream/configs/model.etlt
 input-dims=3;544;960;0
 uff-input-blob-name=input_1
 batch-size=1
