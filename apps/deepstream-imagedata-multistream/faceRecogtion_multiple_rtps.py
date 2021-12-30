@@ -47,6 +47,7 @@ import lib.common as com
 import lib.validate as validate
 import face_recognition
 from datetime import datetime, timedelta
+import threading
 
 from random import randrange
 import random
@@ -110,6 +111,7 @@ global image_group_type
 global delta_time
 global service_camera_mac_address
 global urls
+global header
 
 
 image_group_type = {}
@@ -127,6 +129,7 @@ delta_time = {}
 service_camera_mac_address = {}
 urls = {}
 fake_frame_number = 0
+header = None
 
 
 baseDir = 'configs/'
@@ -145,6 +148,20 @@ faceNet = cv2.dnn.readNet(faceModel, faceProto)
 ageNet = cv2.dnn.readNet(ageModel, ageProto)
 genderNet = cv2.dnn.readNet(genderModel, genderProto)
 ### setters ###
+
+
+
+def set_header(token_file = None):
+    if token_file is None:
+        token_file = os.environ['FACE_RECOGNITION_TOKEN']
+
+    if com.file_exists(token_file):
+        global header
+        token_handler = com.open_file(token_file, 'r+')
+        header = {'Content-type': 'application/json', 'X-KAIROS-TOKEN': token_handler.read().split('\n')[0]}
+        print('Header correctly set')
+        return  header
+    com.log_error('Unable to read token')
 
 
 def set_camera_mac_address(camera_service_id, camera_mac_addresss):
@@ -653,6 +670,7 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
 
             current_group_type = get_group_type(camera_service_id)
 
+            global header
             # Acciones para cuando NO hay coincidencia del rostro 
             if best_index is None:
                 # Actualizando la lista de ids de los rostros no coincidentes
@@ -670,7 +688,9 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
                             'image_encoding': img_encoding_as_list,
                             'img_metadata': str(metadata)
                             }
-                    biblio.send_json(data, 'POST', get_service_url(camera_service_id))
+                    #biblio.send_json(data, 'POST', get_service_url(camera_service_id))
+                    background_result = threading.Thread(target=biblio.send_json, args=(header, data, 'POST', get_service_url(camera_service_id),))
+                    background_result.start()
                     print('Rostro con id: {}, streaming {}, no esta en la White list. Reportando incidente'.format(obj_id, pad_index))
                     # Activar solo para visualizar imagen ---- cv2.imwrite(com.RESULTS_DIRECTORY + '/notInWhiteList_' + str(obj_id) + ".jpg", image)
                 else:
@@ -697,7 +717,9 @@ def classify_to_known_and_unknown(camera_service_id, image, obj_id, name, progra
                     'image_encoding': str(img_encoding),
                     'img_metadata': str(metadata)
                     }
-                biblio.send_json(data, 'POST', get_service_url(camera_service_id))
+                #biblio.send_json(data, 'POST', get_service_url(camera_service_id))
+                background_result = threading.Thread(target=biblio.send_json, args=(header, data, 'POST', get_service_url(camera_service_id),))
+                background_result.start()
                 print('Rostro con id: {} coincide con elemento {} en la Black list , streaming {}'.format(obj_id, metadata['name'], pad_index))
                 # Activar solo para visualizar imagen ---- cv2.imwrite(com.RESULTS_DIRECTORY + '/BlackListMatch_' + str(obj_id) + "_with_" + metadata['name'] + ".jpg", image)
             else:
@@ -999,8 +1021,10 @@ def create_source_bin(index, uri):
     return nbin
 
 def main(args):
-    global scfg, call_order_of_keys
-    scfg = biblio.get_server_info()
+    global scfg, call_order_of_keys, header
+
+    header = set_header()
+    scfg = biblio.get_server_info(header)
     com.log_debug("Final configuration: {}".format(scfg))
 
     # 6-nov-2021
