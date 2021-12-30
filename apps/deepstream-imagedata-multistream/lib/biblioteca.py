@@ -14,10 +14,10 @@ from datetime import datetime, timedelta
 #from random import randrange
 #import random
 
-global header
+#global header
+#header = None
 
 font = cv2.FONT_HERSHEY_SIMPLEX
-header = None
 
 ##### GENERIC FUNCTIONS
 
@@ -26,6 +26,7 @@ def get_supported_actions():
     return ('GET', 'POST', 'PUT', 'DELETE')
 
 
+'''
 def set_header(token_file = None):
     if token_file is None:
         token_file = os.environ['FACE_RECOGNITION_TOKEN']
@@ -35,11 +36,12 @@ def set_header(token_file = None):
         token_handler = com.open_file(token_file, 'r+')
         header = {'Content-type': 'application/json', 'X-KAIROS-TOKEN': token_handler.read().split('\n')[0]}
         print('Header correctly set')
-        return True
+        return  header
     com.log_error('Unable to read token')
+'''
 
 
-def get_server_info_from_server(abort_if_exception = True, quit_program = True):
+def get_server_info_from_server(header, abort_if_exception = True, quit_program = True):
     get_srv_info_url = com.GET_SERVER_CONFIG_URI
     for machine_id in com.get_machine_macaddresses():
         #machine_id = '00:04:4b:eb:f6:dd'  # HARDCODED MACHINE ID
@@ -47,10 +49,10 @@ def get_server_info_from_server(abort_if_exception = True, quit_program = True):
         data = {"id": machine_id}
         
         if abort_if_exception:
-            response = send_json(data, 'POST', get_srv_info_url)
+            response = send_json(header, data, 'POST', get_srv_info_url)
         else:
             options = {'abort_if_exception': False}
-            response = send_json(data, 'POST', get_srv_info_url, **options)
+            response = send_json(header, data, 'POST', get_srv_info_url, **options)
         
         if response.status_code == 200:
             try:
@@ -76,8 +78,8 @@ def get_server_info_from_file(file_path, abort_if_exception = True):
     return False
 
 
-def get_server_info(abort_if_exception = True, quit_program = True):
-    scfg = get_server_info_from_server(abort_if_exception, quit_program)
+def get_server_info(header, abort_if_exception = True, quit_program = True):
+    scfg = get_server_info_from_server(header, abort_if_exception, quit_program)
 
     scfg = False
     if scfg is False:
@@ -87,9 +89,9 @@ def get_server_info(abort_if_exception = True, quit_program = True):
     return validate.parse_parameters_and_values_from_config(scfg)
 
 
-def send_json(payload, action, url = None, **options):
-    set_header()
-    global header
+def send_json(header, payload, action, url = None, **options):
+    #set_header()
+    #global header
 
     if action not in get_supported_actions() or url is None:
         raise Exception('Requested action: ({}) not supported. valid options are:'.format(action, get_supported_actions()))
